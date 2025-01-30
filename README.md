@@ -1,1 +1,1 @@
-# personalAITutor
+# Personal AI Tutor
