@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from neo4j import GraphDatabase
-from neo4j_graphrag.retrievers import VectorRetriever
+from neo4j_graphrag.retrievers import VectorRetriever, HybridRetriever, Text2CypherRetriever
 from neo4j_graphrag.llm import OpenAILLM
 from neo4j_graphrag.generation import GraphRAG
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -27,21 +27,24 @@ URI = os.getenv("NEO4J_URI")
 AUTH = (os.getenv("NEO4J_USERNAME"), os.getenv("NEO4J_PASSWORD"))
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 INDEX_NAME = "vector"
+FULLTEXT_INDEX_NAME = "keyword"
 
 # Initialize the Neo4j driver
 driver = GraphDatabase.driver(URI, auth=AUTH)
 
-# Set up the embedder using HuggingFace
-embedder = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
-# Initialize the retriever with the embedder
-retriever = VectorRetriever(driver, INDEX_NAME, embedder)
-
 # Initialize the LLM (using OpenAI in this case)
 llm = OpenAILLM(model_name="gpt-4o", model_params={"temperature": 0})
 
-# Create the GraphRAG pipeline with the retriever and LLM
-rag = GraphRAG(retriever=retriever, llm=llm)
+# Set up the embedder using HuggingFace
+embedder = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+
+# Initialize the retrievers with the embedder
+vector_retriever = VectorRetriever(driver, INDEX_NAME, embedder)
+hybrid_retriever = HybridRetriever(driver, INDEX_NAME, FULLTEXT_INDEX_NAME, embedder)
+text2cypher_retriever = Text2CypherRetriever(driver, llm)
+
+# Create the GraphRAG pipeline with the LLM and a temporary retriever
+rag = GraphRAG(llm=llm, retriever=vector_retriever)
 
 @app.route('/ask', methods=['POST'])
 @limiter.limit("5 per minute")
@@ -49,10 +52,26 @@ def ask():
     data = request.get_json()
     if not data or 'question' not in data:
         return jsonify({"error": "No question provided"}), 400
+
     question = data['question']
+    retriever_type = data['retriever_type']
+
+    # Select the appropriate retriever based on the retriever_type
+    if retriever_type == 'VectorRetriever':
+        rag.retriever = vector_retriever
+        retriever_config = {"top_k": 5}
+    elif retriever_type == 'HybridRetriever':
+        rag.retriever = hybrid_retriever
+        retriever_config = {"top_k": 5}
+    elif retriever_type == 'Text2CypherRetriever':
+        rag.retriever = text2cypher_retriever
+        retriever_config = None
+    else:
+        return jsonify({"error": "Invalid retriever type specified"}), 400
+
     try:
         # Run the query through the GraphRAG pipeline
-        response = rag.search(query_text=question, retriever_config={"top_k": 5})
+        response = rag.search(query_text=question, retriever_config=retriever_config)
         answer = response.answer
         return jsonify({"answer": answer})
     except Exception as e:
