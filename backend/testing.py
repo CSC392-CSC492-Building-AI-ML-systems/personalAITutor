@@ -12,7 +12,7 @@ questions = ["What is Inheritance?",
              "What is the difference between a class and an interface?"]
 
 for i in questions:
-    payload = {"question": i}
+    payload = {"question": i, "retriever_type": "VectorRetriever"}
     headers = {"Content-Type": "application/json"}
 
     response = requests.post(url, json=payload, headers=headers)
@@ -26,3 +26,15 @@ for i in questions:
 # {'answer': "The main method in a Java program is crucial for its execution. It serves as the entry point for the program, where the Java Virtual Machine (JVM) starts executing the code. The main method is defined with the signature `public static void main(String[] args)`, and it is responsible for initiating the program's execution flow."}
 # {'answer': 'Floating-point numbers can lead to precision issues in Java due to the way they are represented in computer systems. The precision of floating-point numbers is limited by the number of significant bits they can store. For instance, a single precision floating-point number has 23 bits of resolution in its fractional part, which corresponds to about 7 decimal digits of accuracy. Double precision numbers have more bits, allowing for about 16 decimal digits of accuracy. However, not all real numbers can be exactly represented in floating-point format, leading to rounding errors and precision issues.\n\nThe difference between a class and an object in Java is fundamental to object-oriented programming. A class is a blueprint or template for creating objects. It defines the properties (fields) and behaviors (methods) that the objects created from the class will have. An object, on the other hand, is an instance of a class. It is a concrete entity that has state and behavior as defined by its class. While a class is a static definition, an object is a dynamic instance that can be manipulated during the execution of a program.'}
 # {'answer': 'A class is a blueprint for creating objects and can contain both methods and attributes, including implementation details. An interface, on the other hand, is a collection of method signatures without implementations, used to define how an object interacts with the outside world. While classes can have state (instance variables) and provide default implementations for methods, interfaces are more abstract and do not contain attributes, except for public static final attributes, which are effectively constants. Classes can implement multiple interfaces, allowing for organized code and abstraction.'}
+
+    payload = {"question": i, "retriever_type": "HybridRetriever"}
+    headers = {"Content-Type": "application/json"}
+
+    response = requests.post(url, json=payload, headers=headers)
+    print("Hybrid", response.json())
+
+    payload = {"question": i, "retriever_type": "Text2CypherRetriever"}
+    headers = {"Content-Type": "application/json"}
+
+    response = requests.post(url, json=payload, headers=headers)
+    print("Text2Cypher", response.json())
