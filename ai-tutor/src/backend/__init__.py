@@ -12,7 +12,7 @@ jwt = JWTManager()
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object('backend.config.Config')
+    app.config.from_object('config.Config')
 
     # Initialize Flask extensions with the app
     db.init_app(app)
@@ -24,8 +24,8 @@ def create_app():
     os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
     with app.app_context():
-        from .main import main as main_blueprint
-        from .auth import auth as auth_blueprint
+        from main import main as main_blueprint
+        from auth import auth as auth_blueprint
 
         app.register_blueprint(main_blueprint)
         app.register_blueprint(auth_blueprint, url_prefix='/auth')
