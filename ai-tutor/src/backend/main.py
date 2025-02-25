@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from . import rag, vector_retriever, hybrid_retriever, text2cypher_retriever
+from .services import rag, vector_retriever, hybrid_retriever, text2cypher_retriever
 
 main = Blueprint('main', __name__)
 
