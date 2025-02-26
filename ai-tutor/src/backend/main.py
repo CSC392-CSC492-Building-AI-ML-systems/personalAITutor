@@ -57,3 +57,12 @@ def ask():
         return jsonify({"answer": answer_text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@main.route('/get-flowchart', methods=['GET'])
+def get_flowchart():
+    try:
+        with open('flowchart.txt', 'r') as file:
+            content = file.read()
+        return content
+    except Exception as e:
+        return str(e), 500
