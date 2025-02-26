@@ -59,6 +59,7 @@ def ask():
         return jsonify({"error": str(e)}), 500
 
 @main.route('/get-flowchart', methods=['GET'])
+@jwt_required()
 def get_flowchart():
     try:
         with open('flowchart.txt', 'r') as file:
