@@ -71,6 +71,3 @@ flowchart LR
     n32 --> n33
     n35 --> n36
     n36 --> n37
-
-
-
