@@ -67,3 +67,16 @@ def get_flowchart():
         return content
     except Exception as e:
         return str(e), 500
+
+@main.route('/delete-questions', methods=['DELETE'])
+@jwt_required()
+def delete_questions():
+    user_id = get_jwt_identity()
+    try:
+        # Delete all questions and answers for the authenticated user
+        Question.query.filter_by(user_id=user_id).delete()
+        db.session.commit()
+        return jsonify({"message": "All questions and answers deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
