@@ -40,12 +40,25 @@ def logout():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@auth.route('/delete-questions', methods=['DELETE'])
+@jwt_required()
+def delete_questions():
+    user_id = get_jwt_identity()
+    try:
+        # Delete all questions and answers for the authenticated user
+        Question.query.filter_by(user_id=user_id).delete()
+        db.session.commit()
+        return jsonify({"message": "All questions and answers deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 @auth.route('/delete-user', methods=['DELETE'])
 @jwt_required()
 def delete_user():
     user_id = get_jwt_identity()
     try:
-        # Delete all questions for the authenticated user
+        # Delete all questions and answers for the authenticated user
         Question.query.filter_by(user_id=user_id).delete()
         # Delete the user
         User.query.filter_by(username=user_id).delete()
