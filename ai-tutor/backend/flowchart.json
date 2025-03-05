@@ -92,7 +92,16 @@
         "https://www.agilealliance.org/glossary/tdd/",
         "https://developer.ibm.com/articles/5-steps-of-test-driven-development/"
       ], 
-      "internal": [] },
+      "internal": [
+        {
+          "path": "path/to/file",
+          "page": 3
+        }, 
+        {
+          "path": "path/to/file",
+          "page": 5
+        }
+      ] },
     { 
       "topic": "Scrum", 
       "external": [], 
