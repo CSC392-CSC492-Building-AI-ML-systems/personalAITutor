@@ -25,20 +25,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" suppressHydrationWarning >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col h-full `}>
         <Link href="/">
-          <Image
-            className="dark:invert"
-            src="/vercel.svg"
-            alt="Vercel logomark"
-            width={20}
-            height={20}
-          />
         </Link>
         <Link href="/roadmaps">Roadmaps</Link>
         <Link href="/chatbot">Chatbot</Link>
-        {children}
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
       </body>
     </html>
   );
