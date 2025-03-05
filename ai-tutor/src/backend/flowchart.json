@@ -1,0 +1,169 @@
+{
+  "Week 1": [
+    { 
+      "topic": "Basic Java Syntax", 
+      "external": [], 
+      "internal": [] 
+    },
+    { 
+      "topic": "Java Primitive Types", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Java Objects", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Classes", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Inheritance", 
+      "external": [], 
+      "internal": [] }
+  ],
+  "Week 2": [
+    { 
+      "topic": "Interfaces", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "File I/O", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Overriding/Shadowing", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Object Oriented Design Principles", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "SOLID", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "super", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "final", 
+      "external": [], 
+      "internal": [] }
+  ],
+  "Week 3": [
+    { 
+      "topic": "Parametric Polymorphism", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Exceptions", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "User Stories", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Git", 
+      "external": [], 
+      "internal": [] }
+  ],
+  "Week 4": [
+    { 
+      "topic": "Software Engineering Processes", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Waterfall", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Agile", 
+      "external": [
+        "https://www.geeksforgeeks.org/software-engineering-agile-software-development/",
+        "https://www.geeksforgeeks.org/what-is-agile-methodology/",
+        "https://www.geeksforgeeks.org/agile-software-process-and-its-principles/",
+        "https://www.pmi.org/disciplined-agile/agile/theagilemanifesto",
+        "https://learn.microsoft.com/en-us/devops/plan/what-is-agile",
+        "https://www.coursera.org/articles/what-is-agile-a-beginners-guide",
+        "https://www.geeksforgeeks.org/test-driven-development-tdd/",
+        "https://www.agilealliance.org/glossary/tdd/",
+        "https://developer.ibm.com/articles/5-steps-of-test-driven-development/"
+      ], 
+      "internal": [] },
+    { 
+      "topic": "Scrum", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "CRC", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "UML Diagrams", 
+      "external": [], 
+      "internal": [] }
+  ],
+  "Week 5/6/7": [
+    { 
+      "topic": "Design Patterns", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Observer", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Iterator", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Strategy", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Command", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Accessibility", 
+      "external": [], 
+      "internal": [] }
+  ],
+  "Week 11": [
+    { 
+      "topic": "Floating Point Numbers", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "IEEE 754 Format", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Overflow/Underflow", 
+      "external": [], 
+      "internal": [] }
+  ],
+  "Week 9": [
+    { 
+      "topic": "Threading", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Synchronization", 
+      "external": [], 
+      "internal": [] },
+    { 
+      "topic": "Concurrency Pattern: Producer/Consumer Pattern", 
+      "external": [], 
+      "internal": [] }
+  ],
+  "Week 8": [
+    { 
+      "topic": "Model-View-Controller Design", 
+      "external": [], 
+      "internal": [] }
+  ]
+}
