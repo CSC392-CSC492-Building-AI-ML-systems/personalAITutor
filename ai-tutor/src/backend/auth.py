@@ -45,7 +45,12 @@ def logout():
 def delete_questions():
     user_id = get_jwt_identity()
     try:
-        # Delete all questions and answers for the authenticated user
+        # Check if there are any questions to delete
+        questions = Question.query.filter_by(user_id=user_id).all()
+        if not questions:
+            return jsonify({"message": "No questions to delete"}), 200
+
+        # Delete all questions for the authenticated user
         Question.query.filter_by(user_id=user_id).delete()
         db.session.commit()
         return jsonify({"message": "All questions and answers deleted successfully"}), 200
@@ -59,7 +64,7 @@ def delete_user():
     user_id = get_jwt_identity()
     try:
         # Delete all questions and answers for the authenticated user
-        Question.query.filter_by(user_id=user_id).delete()
+        delete_questions()
         # Delete the user
         User.query.filter_by(username=user_id).delete()
         db.session.commit()
