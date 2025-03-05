@@ -38,8 +38,8 @@ class FlaskAppTestCase(unittest.TestCase):
             data=json.dumps(register_payload),
             content_type="application/json"
         )
-        self.assertEqual(response.status_code, 201)
         print("Register:", response.get_json())
+        self.assertEqual(response.status_code, 201)
 
         # 2. Login with the new user
         login_payload = {
@@ -51,11 +51,11 @@ class FlaskAppTestCase(unittest.TestCase):
             data=json.dumps(login_payload),
             content_type="application/json"
         )
-        self.assertEqual(response.status_code, 200)
         login_data = response.get_json()
         self.assertIn("access_token", login_data)
         access_token = login_data["access_token"]
         print("Login:", login_data)
+        self.assertEqual(response.status_code, 200)
 
         # Prepare auth headers using the received token
         auth_headers = {
@@ -73,24 +73,24 @@ class FlaskAppTestCase(unittest.TestCase):
         #     data=json.dumps(question_payload),
         #     headers=auth_headers
         # )
-        # self.assertEqual(response.status_code, 200)
         # print("Ask:", response.get_json())
+        # self.assertEqual(response.status_code, 200)
 
         # 4. Get the flowchart
         response = self.client.get("/get-flowchart", headers=auth_headers)
-        self.assertEqual(response.status_code, 200)
         flowchart_text = response.data.decode("utf-8")
         print("Flowchart:", flowchart_text)
+        self.assertEqual(response.status_code, 200)
 
         # 5. Delete all questions
-        response = self.client.delete("/delete-questions", headers=auth_headers)
-        self.assertEqual(response.status_code, 200)
+        response = self.client.delete("/auth/delete-questions", headers=auth_headers)
         print("Delete Questions:", response.get_json())
+        self.assertEqual(response.status_code, 200)
 
         # 6. Delete the user
         response = self.client.delete("/auth/delete-user", headers=auth_headers)
-        self.assertEqual(response.status_code, 200)
         print("Delete User:", response.get_json())
+        self.assertEqual(response.status_code, 200)
 
 if __name__ == '__main__':
     unittest.main()
