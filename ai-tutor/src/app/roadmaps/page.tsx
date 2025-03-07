@@ -15,29 +15,44 @@ const colors = {
   externalNode: "#ffebcd", // External resource node color
 };
 
-const sidebarTheme = {
-  weekBox: {
-    backgroundColor: colors.weekBox,
-    color: colors.text,
-    padding: "10px 16px",
-    borderRadius: "4px",
-    border: `1px solid ${colors.border}`,
-    marginBottom: "8px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    width: "220px",
-    display: "flex",
-    justifyContent: "space-between",
-  },
-  topicBox: {
-    backgroundColor: colors.boxBackground,
-    color: colors.text,
-    padding: "8px 12px",
-    borderRadius: "4px",
-    border: `1px solid ${colors.border}`,
-    marginBottom: "6px",
-    fontSize: "14px",
-  },
+// -------------------------------------------------------------------
+// Dummy Detail Data for Each Subtopic
+// -------------------------------------------------------------------
+const topicDetails = {
+  java1:
+    "Basic Java Syntax covers the essentials of writing Java programs including program structure, variables, control structures and a brief intro to object creation. It forms the foundation for all Java programming.",
+  java2:
+    "Java Primitive Types include data types like int, double, char, and boolean. Understanding these is crucial for managing data in your programs.",
+  java3:
+    "Java Objects allow you to encapsulate data and behavior. Learn how to instantiate objects and access their properties.",
+  java4:
+    "Classes are blueprints for objects. They encapsulate methods and fields to define behaviors and properties.",
+  java5:
+    "Inheritance allows one class to inherit fields and methods from another, enabling code reuse and the creation of more complex data models.",
+  oop1: "Interfaces in Java define a contract that classes can implement. They are key to achieving polymorphism.",
+  oop2: "Overriding and Shadowing let subclasses modify or hide the behavior of inherited methods and fields.",
+  oop3: "OOP Design Principles guide the creation of maintainable and scalable object-oriented software.",
+  oop4: "SOLID principles provide a set of guidelines to improve software design and maintainability.",
+  oop5: "The 'super' keyword is used to access methods and constructors of a parent class.",
+  oop6: "The 'final' keyword prevents modifications in classes, methods, or variables.",
+  git1: "Git is a distributed version control system that helps manage source code history and collaboration among developers.",
+  se1: "Software Engineering Processes provide frameworks and methodologies to manage software development projects.",
+  se2: "Waterfall is a sequential development process where each phase must be completed before the next begins.",
+  se3: "Agile is an iterative development methodology emphasizing customer collaboration, flexibility, and rapid delivery.",
+  se4: "Scrum is an Agile framework that organizes development work into time-boxed sprints.",
+  se5: "CRC (Class-Responsibility-Collaborator) cards are used for brainstorming and designing object-oriented systems.",
+  se6: "UML Diagrams visually represent the architecture, design, and implementation of software systems.",
+  dp1: "Design Patterns are proven solutions to common design problems. They improve code readability and maintainability.",
+  dp2: "The Observer pattern enables an object to notify other objects about state changes.",
+  dp3: "The Iterator pattern provides a standardized way to access elements in a collection without exposing its underlying representation.",
+  dp4: "The Strategy pattern allows the algorithm used by an object to be selected at runtime.",
+  dp5: "The Command pattern encapsulates a request as an object, thereby allowing for parameterization of clients with different requests.",
+  dp6: "Accessibility ensures that software is usable by people with a wide range of abilities.",
+  adv1: "Parametric Polymorphism in Java enables generic programming, allowing methods and classes to operate on objects of various types.",
+  adv2: "Exceptions provide a mechanism to handle runtime errors gracefully.",
+  adv3: "Floating Point Numbers represent real numbers in Java, though with limited precision which can lead to rounding errors.",
+  adv4: "IEEE 754 is the standard that defines the representation and behavior of floating point numbers.",
+  adv5: "Overflow and Underflow occur when a calculation produces a result outside the range that can be represented by the data type.",
 };
 
 // -------------------------------------------------------------------
@@ -54,7 +69,6 @@ const courseData = [
       { id: "java4", name: "Classes" },
       { id: "java5", name: "Inheritance" },
     ],
-    // Intra-group topic connections (dashed lines can be used for emphasis later)
     connections: [
       { from: "java2", to: "java3" },
       { from: "java3", to: "java4" },
@@ -69,11 +83,15 @@ const courseData = [
       { id: "oop2", name: "Overriding/Shadowing" },
       { id: "oop3", name: "OOP Design Principles" },
       { id: "oop4", name: "SOLID" },
+      { id: "oop5", name: "super" },
+      { id: "oop6", name: "final" },
     ],
     connections: [
       { from: "oop1", to: "oop2" },
       { from: "oop2", to: "oop3" },
       { from: "oop3", to: "oop4" },
+      { from: "oop2", to: "oop5" },
+      { from: "oop2", to: "oop6" },
     ],
   },
   {
@@ -138,15 +156,15 @@ const courseData = [
   },
 ];
 
-// Extra connections between major groups (for cross-topic links)
+// Extra cross-group connections
 const extraConnections = [
-  { from: "java5", to: "oop1" }, // Java Fundamentals leads into OOP
-  { from: "oop4", to: "dp1" }, // SOLID leads into Design Patterns
-  { from: "se3", to: "dp1" }, // Agile influences Design Patterns
+  { from: "java5", to: "oop1" },
+  { from: "oop4", to: "dp1" },
+  { from: "se3", to: "dp1" },
 ];
 
 // -------------------------------------------------------------------
-// External Resources (parsed from source.csv simulation)
+// External Resources (CSV simulation)
 // -------------------------------------------------------------------
 const externalResources = [
   {
@@ -159,7 +177,7 @@ const externalResources = [
   {
     filename: "https://www.geeksforgeeks.org/data-types-in-java/",
     subtopic: "Java",
-    resourceType: "Data Types",
+    resourceType: "Webpage",
     processed: "Y",
   },
   {
@@ -196,7 +214,7 @@ const externalResources = [
   },
 ];
 
-// Helper: map resource subtopic to target topic node ID (using first node of group)
+// Helper: map resource subtopic to target topic node ID (first topic in group)
 const mapSubtopicToTargetId = (subtopic) => {
   const lower = subtopic.toLowerCase();
   if (lower.includes("oop")) return "oop1";
@@ -217,7 +235,7 @@ const nodeSpacingX = 300;
 const groupNodeY = 20;
 const topicSpacingY = 120;
 
-// 1. Create "big branch" group nodes
+// 1. Big branch (group) nodes
 const groupNodes = courseData.map((group, groupIndex) => ({
   id: group.id,
   data: { label: group.title },
@@ -231,7 +249,7 @@ const groupNodes = courseData.map((group, groupIndex) => ({
   },
 }));
 
-// 2. Create topic nodes for each group (positioned below their group node)
+// 2. Topic nodes for each group
 const topicNodes = courseData.flatMap((group, groupIndex) =>
   group.topics.map((topic, topicIndex) => ({
     id: topic.id,
@@ -249,7 +267,7 @@ const topicNodes = courseData.flatMap((group, groupIndex) =>
   }))
 );
 
-// 3. Create edges from each group node to its topics (big branch edges)
+// 3. Edges from each group node to its topics (thick edges)
 const groupTopicEdges = courseData.flatMap((group) =>
   group.topics.map((topic) => ({
     id: `${group.id}-${topic.id}`,
@@ -260,7 +278,7 @@ const groupTopicEdges = courseData.flatMap((group) =>
   }))
 );
 
-// 4. Intra-group topic-to-topic edges (from provided connections)
+// 4. Intra-group topic-to-topic edges
 const intraGroupEdges = courseData.flatMap((group) =>
   group.connections.map((conn) => ({
     id: `${conn.from}-${conn.to}`,
@@ -306,7 +324,7 @@ externalResources.forEach((res, index) => {
         </a>
       ),
     },
-    position: { x: 0, y: 0 }, // Temporary – adjusted below
+    position: { x: 0, y: 0 },
     style: {
       border: `1px solid ${colors.border}`,
       backgroundColor: colors.externalNode,
@@ -324,7 +342,7 @@ externalResources.forEach((res, index) => {
   });
 });
 
-// Position external nodes relative to their target topic nodes
+// Position external nodes relative to their target nodes
 const targetPositions = {};
 [...topicNodes, ...groupNodes].forEach((node) => {
   targetPositions[node.id] = node.position;
@@ -341,7 +359,7 @@ externalFlowNodes = externalFlowNodes.map((node) => {
   return node;
 });
 
-// 7. Additional big branch edges between group nodes (sequential connection)
+// 7. Additional sequential edges between group nodes
 const groupSequentialEdges = [];
 for (let i = 0; i < courseData.length - 1; i++) {
   groupSequentialEdges.push({
@@ -364,20 +382,107 @@ const flowEdges = [
 ];
 
 // -------------------------------------------------------------------
+// Build Mapping from Topic Node to Its Parent Group
+// -------------------------------------------------------------------
+const topicToGroupMapping = {};
+courseData.forEach((group) => {
+  group.topics.forEach((topic) => {
+    topicToGroupMapping[topic.id] = group.id;
+  });
+  topicToGroupMapping[group.id] = group.id;
+});
+
+// -------------------------------------------------------------------
+// Helper Functions for Detailed Topic Info
+// -------------------------------------------------------------------
+const getTopicName = (topicId) => {
+  for (const group of courseData) {
+    for (const topic of group.topics) {
+      if (topic.id === topicId) {
+        return topic.name;
+      }
+    }
+  }
+  return "";
+};
+
+const getParentGroupName = (topicId) => {
+  const groupId = topicToGroupMapping[topicId];
+  const group = courseData.find((g) => g.id === groupId);
+  return group ? group.title : "";
+};
+
+const getExternalLinksForTopic = (topicId) => {
+  // Filter external resources that are mapped to this topic
+  return externalResources.filter((res) => {
+    const target = mapSubtopicToTargetId(res.subtopic);
+    return target === topicId && res.processed === "Y";
+  });
+};
+
+// -------------------------------------------------------------------
+// Detailed Topic Information Component
+// -------------------------------------------------------------------
+const TopicDetailInfo = ({ topicId, onClose }) => {
+  const topicName = getTopicName(topicId);
+  const parentGroup = getParentGroupName(topicId);
+  const details = topicDetails[topicId] || "No detailed information available.";
+  const links = getExternalLinksForTopic(topicId);
+
+  return (
+    <div
+      style={{
+        border: `2px solid ${colors.border}`,
+        backgroundColor: colors.boxBackground,
+        padding: "20px",
+        borderRadius: "6px",
+        marginBottom: "20px",
+      }}
+    >
+      <h2 style={{ color: colors.text, marginBottom: "10px" }}>{topicName}</h2>
+      <h4 style={{ color: colors.text, marginBottom: "10px" }}>
+        Parent Topic: {parentGroup}
+      </h4>
+      <p style={{ color: colors.text, marginBottom: "10px" }}>{details}</p>
+      {links.length > 0 && (
+        <div style={{ marginBottom: "10px" }}>
+          <h4 style={{ color: colors.text }}>Related Resources:</h4>
+          <ul>
+            {links.map((link, idx) => (
+              <li key={idx}>
+                <a
+                  href={link.filename}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: colors.text }}
+                >
+                  {link.resourceType}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <button
+        onClick={onClose}
+        style={{ padding: "8px 12px", cursor: "pointer" }}
+      >
+        Close Details
+      </button>
+    </div>
+  );
+};
+
+// -------------------------------------------------------------------
 // Main Component: Roadmaps
 // -------------------------------------------------------------------
 const Roadmaps = () => {
-  // Sidebar state: expand/collapse each group
-  const [expandedGroups, setExpandedGroups] = useState(() => {
-    const initial = {};
-    courseData.forEach((group) => {
-      initial[group.id] = true;
-    });
-    return initial;
-  });
+  // Left Pane: Show detailed info for selected topic (initially none)
+  const [selectedTopic, setSelectedTopic] = useState(null);
 
-  const toggleGroup = (groupId) => {
-    setExpandedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
+  // When a node is clicked, update the selected topic (only one at a time)
+  const handleNodeClick = (event, node) => {
+    setSelectedTopic((prev) => (prev === node.id ? null : node.id));
   };
 
   return (
@@ -399,31 +504,31 @@ const Roadmaps = () => {
         CSC207 Interactive Roadmap
       </h1>
       <div style={{ display: "flex", gap: "20px" }}>
-        {/* Sidebar Navigation */}
+        {/* Left Pane: Detailed Topic Information */}
         <div style={{ flex: 1 }}>
-          {courseData.map((group) => (
-            <div key={group.id} style={{ marginBottom: "16px" }}>
-              <div
-                style={sidebarTheme.weekBox}
-                onClick={() => toggleGroup(group.id)}
-              >
-                {group.title}
-                <span>{expandedGroups[group.id] ? "−" : "+"}</span>
-              </div>
-              {expandedGroups[group.id] && (
-                <div style={{ marginLeft: "20px", marginTop: "8px" }}>
-                  {group.topics.map((topic) => (
-                    <div key={topic.id} style={sidebarTheme.topicBox}>
-                      {topic.name}
-                    </div>
-                  ))}
-                </div>
-              )}
+          {selectedTopic ? (
+            <TopicDetailInfo
+              topicId={selectedTopic}
+              onClose={() => setSelectedTopic(null)}
+            />
+          ) : (
+            <div
+              style={{
+                padding: "20px",
+                border: `1px solid ${colors.border}`,
+                borderRadius: "6px",
+                backgroundColor: colors.boxBackground,
+              }}
+            >
+              <p style={{ color: colors.text }}>
+                Click on a node in the roadmap (right side) to view detailed
+                topic information here.
+              </p>
             </div>
-          ))}
+          )}
         </div>
 
-        {/* Interactive Flowchart */}
+        {/* Right Pane: Interactive Flowchart */}
         <div
           style={{
             flex: 1,
@@ -432,7 +537,12 @@ const Roadmaps = () => {
             borderRadius: "4px",
           }}
         >
-          <ReactFlow nodes={flowNodes} edges={flowEdges} fitView>
+          <ReactFlow
+            nodes={flowNodes}
+            edges={flowEdges}
+            onNodeClick={handleNodeClick}
+            fitView
+          >
             <MiniMap nodeColor={() => colors.boxBackground} />
             <Controls />
             <Background color={colors.line} gap={16} />
