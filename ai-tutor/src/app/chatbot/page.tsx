@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import CourseDropdown from "../components/CourseDropdown"; // Import the dropdown component
-import { useAutoScroll } from "../hooks/autoscroll"; 
+import CourseDropdown from "../components/CourseDropdown";
+import { useAutoScroll } from "../hooks/autoscroll";
 
 interface Message {
   text: string;
@@ -15,23 +15,28 @@ export default function Chatbot() {
   const [sidebarCourses, setSidebarCourses] = useState<string[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [input, setInput] = useState("");
+  const [courseError, setCourseError] = useState<string | null>(null);
 
   const { chatRef, scrollToBottom } = useAutoScroll();
 
-  // Fetch courses from API on mount
+  // Remove error message after 5 seconds
+  useEffect(() => {
+    if (courseError) {
+      const timer = setTimeout(() => {
+        setCourseError(null);
+      }, 5000); 
+
+      return () => clearTimeout(timer); // Cleanup timeout
+    }
+  }, [courseError]);
+
   useEffect(() => {
     async function fetchCourses() {
       try {
-        if (typeof window !== "undefined") {
-          console.log("Client-side only code running!");
-        }
-        console.log("Fetching courses...");
         const res = await fetch("http://localhost:3000/api/courses");
-
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
 
         const data: string[] = await res.json();
-        console.log("Courses fetched:", data);
         setAvailableCourses(data);
       } catch (error) {
         console.error("Failed to fetch courses:", error);
@@ -40,11 +45,12 @@ export default function Chatbot() {
     fetchCourses();
   }, []);
 
-  // Function to add a course to the sidebar
   const addCourse = (course: string) => {
-    setSidebarCourses((prev) => [...prev, course]); // Add to sidebar
-    setAvailableCourses((prev) => prev.filter((c) => c !== course)); // Remove from dropdown
-    setSelectedCourse(course); // Select the newly added course
+    setSidebarCourses((prev) => [...prev, course]);
+    setAvailableCourses((prev) => prev.filter((c) => c !== course));
+    setSelectedCourse(course);
+    setCourseError(null); // Clear course selection error
+
     setMessages((prev) => ({
       ...prev,
       [course]: [
@@ -57,61 +63,55 @@ export default function Chatbot() {
   };
 
   const sendMessage = async () => {
-    if (!input.trim() || !selectedCourse) return;
-  
-    // Add user's message to UI immediately
+    if (!input.trim()) return;
+
+    if (!selectedCourse) {
+      setCourseError("Please add a chatbot for a course before sending a message.");
+      return;
+    }
+
     setMessages((prev) => ({
       ...prev,
       [selectedCourse]: [...(prev[selectedCourse] || []), { text: input, sender: "user" }],
     }));
 
     scrollToBottom();
-  
-    // Add a placeholder bot message while waiting for the response
+
     setMessages((prev) => ({
       ...prev,
-      [selectedCourse]: [
-        ...prev[selectedCourse],
-        { text: "...", sender: "bot" }, // Placeholder
-      ],
+      [selectedCourse]: [...prev[selectedCourse], { text: "...", sender: "bot" }],
     }));
-  
-    setInput(""); // Clear input field
-  
+
+    setInput("");
+
     try {
       const response = await fetch(`/api/chat?course=${selectedCourse}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input }),
       });
-  
+
       const reader = response.body?.getReader();
       if (!reader) return;
-  
+
       const decoder = new TextDecoder();
       let aiMessage = "";
-  
+
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
         aiMessage += decoder.decode(value, { stream: true });
-  
+
         setMessages((prev) => ({
           ...prev,
-          [selectedCourse]: [
-            ...prev[selectedCourse].slice(0, -1), // Remove the "Thinking..." placeholder
-            { text: aiMessage, sender: "bot" },
-          ],
+          [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: aiMessage, sender: "bot" }],
         }));
       }
     } catch (error) {
       console.error("Error sending message", error);
       setMessages((prev) => ({
         ...prev,
-        [selectedCourse]: [
-          ...prev[selectedCourse].slice(0, -1), // Remove placeholder
-          { text: "Error generating response. Please try again.", sender: "bot" },
-        ],
+        [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: "Error generating response. Please try again.", sender: "bot" }],
       }));
     }
   };
@@ -123,11 +123,10 @@ export default function Chatbot() {
         {/* Sidebar */}
         <aside className="w-1/4 border-r p-4 bg-white">
           <h1 className="relative text-5xl uppercase w-fit mx-auto">
-            <span className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-6 w-full" style={{ backgroundColor: "#E9F3DA" }}></span>
+            <span className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-6 w-full bg-[#E9F3DA]"></span>
             <span className="relative font-mono">CHATBOT</span>
           </h1>
           <div className="flex flex-col space-y-2 mt-6">
-            {/* Render selected courses */}
             {sidebarCourses.map((course) => (
               <button
                 key={course}
@@ -135,32 +134,39 @@ export default function Chatbot() {
                   selectedCourse === course ? "font-semibold" : ""
                 }`}
                 style={selectedCourse === course ? { backgroundColor: "#FFF0D2" } : { backgroundColor: "#FAFAEB" }}
-                onClick={() => setSelectedCourse(course)}
+                onClick={() => {
+                  setSelectedCourse(course);
+                  setCourseError(null);
+                }}
               >
                 {course}
               </button>
             ))}
-  
-            {/* Radix UI Dropdown for adding courses */}
             <CourseDropdown availableCourses={availableCourses} addCourse={addCourse} />
           </div>
         </aside>
   
         {/* Chat Area */}
         <main className="flex-1 flex flex-col h-full">
-          {/* Messages Container - Scrollable */}
           <div ref={chatRef} className="flex-1 p-4 overflow-y-auto min-h-0">
             {(messages[selectedCourse!] || []).map((msg, index) => (
               <div key={index} className={`mb-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
                 <div className={`p-3 font-mono rounded-lg max-w-xs ${msg.sender === "user" ? "bg-yellow-100" : "bg-[#E9F3DA]"}`}>
-                  {msg.text} {/* No markdown */}
+                  {msg.text}
                 </div>
               </div>
             ))}
           </div>
-  
+
           {/* Input Box - Fixed at Bottom */}
-          <div className="p-4 bg-white border-t flex items-center">
+          <div className="p-4 bg-white border-t flex flex-col items-center">
+            {/* Error Message (if no course is selected) */}
+            {courseError && (
+             <div className=" text-black-600 font-semibold text-lg py-2 px-4 rounded-md text-center mb-2 " style={ {backgroundColor: "#E9F3DA"}}>
+              {courseError}
+              </div>
+            )}
+            
             <div className="relative w-full">
               {/* Input Field */}
               <input
@@ -169,14 +175,13 @@ export default function Chatbot() {
                 placeholder="Type a message..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && selectedCourse && sendMessage()}
+                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               />
               
               {/* Send Button (Inside Input) */}
               <button
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
                 onClick={sendMessage}
-                disabled={!selectedCourse}
               > 
                 ➤
               </button>
