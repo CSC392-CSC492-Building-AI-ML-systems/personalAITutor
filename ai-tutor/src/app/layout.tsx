@@ -1,18 +1,8 @@
 import type { Metadata } from "next";
 import Link from 'next/link';
 import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Advisory",
@@ -25,16 +15,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning >
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col h-full `}>
-        <Link href="/">
-        </Link>
-        <Link href="/roadmaps">Roadmaps</Link>
-        <Link href="/chatbot">Chatbot</Link>
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
-      </body>
+    <html lang="en">
+<body className={`font-mono h-screen antialiased flex flex-col`}>
+  {/* Header */}
+  <div className="border-b flex flex-none flex-row h-1/10 items-center">
+    <Link href="/">
+      <Image className="m-3" src="logo.svg" alt="advisory logo" width={80} height={80}></Image>
+    </Link>
+    <Link href="/roadmaps" className="ml-4">Roadmaps</Link>
+    <Link href="/chatbot" className="ml-4">Chatbot</Link>
+  </div>
+  {/* Main content */}
+  <main className="flex-1 overflow-auto">
+    {children}
+  </main>
+
+  {/* Footer */}
+  <div className="border-t flex-none h-1/10 text-center">
+    Terms of service
+  </div>
+</body>
     </html>
   );
 }
