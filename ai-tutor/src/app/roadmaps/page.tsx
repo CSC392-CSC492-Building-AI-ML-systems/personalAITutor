@@ -12,7 +12,7 @@ const colors = {
   text: "#2c3e50", // Dark text color
   line: "#999", // Default line color
   weekBox: "#f0dc9e", // Big branch (group) node color
-  externalNode: "#ffebcd", // External resource node color
+  externalNode: "#ffebcd", // External resource node color (not used now)
 };
 
 // -------------------------------------------------------------------
@@ -156,118 +156,62 @@ const courseData = [
   },
 ];
 
-// Extra cross-group connections
-const extraConnections = [
-  { from: "java5", to: "oop1" },
-  { from: "oop4", to: "dp1" },
-  { from: "se3", to: "dp1" },
-];
-
 // -------------------------------------------------------------------
-// External Resources (CSV simulation)
+// Layout constants for a star/circle layout
 // -------------------------------------------------------------------
-const externalResources = [
-  {
-    filename:
-      "https://cspages.ucalgary.ca/~tam/2014/233W/notes/acrobat/intro_OO.pdf",
-    subtopic: "OOP",
-    resourceType: "PDF",
-    processed: "Y",
-  },
-  {
-    filename: "https://www.geeksforgeeks.org/data-types-in-java/",
-    subtopic: "Java",
-    resourceType: "Webpage",
-    processed: "Y",
-  },
-  {
-    filename: "https://www.geeksforgeeks.org/git-flow/",
-    subtopic: "Git (version control)",
-    resourceType: "Webpage",
-    processed: "Y",
-  },
-  {
-    filename:
-      "https://www.geeksforgeeks.org/software-engineering-agile-software-development/",
-    subtopic: "Agile Process",
-    resourceType: "Webpage",
-    processed: "Y",
-  },
-  {
-    filename: "https://www.geeksforgeeks.org/what-is-a-user-story-in-agile/",
-    subtopic: "User Stories",
-    resourceType: "Webpage",
-    processed: "Y",
-  },
-  {
-    filename: "https://refactoring.guru/design-patterns/what-is-pattern",
-    subtopic: "Design Patterns",
-    resourceType: "Webpage",
-    processed: "Y",
-  },
-  {
-    filename:
-      "https://www.geeksforgeeks.org/floating-point-representation-basics/",
-    subtopic: "Floating Point Numbers",
-    resourceType: "Webpage",
-    processed: "Y",
-  },
-];
+const groupNodeX = 150;
+const groupSpacingY = 500; // vertical distance between parent nodes
+const topicRadius = 180; // radius for subtopics around the parent
 
-// Helper: map resource subtopic to target topic node ID (first topic in group)
-const mapSubtopicToTargetId = (subtopic) => {
-  const lower = subtopic.toLowerCase();
-  if (lower.includes("oop")) return "oop1";
-  if (lower.includes("java")) return "java1";
-  if (lower.includes("git")) return "git1";
-  if (lower.includes("agile")) return "se3";
-  if (lower.includes("user story")) return "se1";
-  if (lower.includes("uml")) return "se6";
-  if (lower.includes("design pattern")) return "dp1";
-  if (lower.includes("floating point")) return "adv3";
-  return null;
+// Parent node style
+const parentNodeStyle = {
+  border: `2px solid ${colors.border}`,
+  backgroundColor: colors.weekBox,
+  padding: 20,
+  borderRadius: 10,
+  fontWeight: "bold",
+  fontSize: "16px",
 };
 
-// -------------------------------------------------------------------
-// Build Flowchart Data
-// -------------------------------------------------------------------
-const nodeSpacingX = 300;
-const groupNodeY = 20;
-const topicSpacingY = 120;
+// Subtopic node style
+const subtopicStyle = {
+  border: `1px solid ${colors.border}`,
+  backgroundColor: colors.boxBackground,
+  padding: 14,
+  borderRadius: 6,
+  fontSize: "14px",
+};
 
-// 1. Big branch (group) nodes
+// 1. Parent (group) nodes arranged vertically
 const groupNodes = courseData.map((group, groupIndex) => ({
   id: group.id,
   data: { label: group.title },
-  position: { x: groupIndex * nodeSpacingX, y: groupNodeY },
-  style: {
-    border: `2px solid ${colors.border}`,
-    backgroundColor: colors.weekBox,
-    padding: 12,
-    borderRadius: 6,
-    fontWeight: "bold",
-  },
+  position: { x: groupNodeX, y: groupIndex * groupSpacingY + 20 },
+  style: parentNodeStyle,
 }));
 
-// 2. Topic nodes for each group
-const topicNodes = courseData.flatMap((group, groupIndex) =>
-  group.topics.map((topic, topicIndex) => ({
-    id: topic.id,
-    data: { label: topic.name },
-    position: {
-      x: groupIndex * nodeSpacingX,
-      y: 100 + topicIndex * topicSpacingY,
-    },
-    style: {
-      border: `1px solid ${colors.border}`,
-      backgroundColor: colors.boxBackground,
-      padding: 10,
-      borderRadius: 4,
-    },
-  }))
-);
+// 2. Subtopic nodes for each group, arranged in a circle around the parent
+const topicNodes = courseData.flatMap((group, groupIndex) => {
+  const baseX = groupNodes[groupIndex].position.x;
+  const baseY = groupNodes[groupIndex].position.y;
+  const numberOfTopics = group.topics.length;
 
-// 3. Edges from each group node to its topics (thick edges)
+  return group.topics.map((topic, topicIndex) => {
+    // Spread subtopics evenly in a circle, with first near the top
+    const angle = (2 * Math.PI * topicIndex) / numberOfTopics - Math.PI / 2;
+    return {
+      id: topic.id,
+      data: { label: topic.name },
+      position: {
+        x: baseX + topicRadius * Math.cos(angle),
+        y: baseY + topicRadius * Math.sin(angle),
+      },
+      style: subtopicStyle,
+    };
+  });
+});
+
+// 3. Only keep edges from each parent node to its subtopics (one line per subtopic)
 const groupTopicEdges = courseData.flatMap((group) =>
   group.topics.map((topic) => ({
     id: `${group.id}-${topic.id}`,
@@ -278,88 +222,7 @@ const groupTopicEdges = courseData.flatMap((group) =>
   }))
 );
 
-// 4. Intra-group topic-to-topic edges
-const intraGroupEdges = courseData.flatMap((group) =>
-  group.connections.map((conn) => ({
-    id: `${conn.from}-${conn.to}`,
-    source: conn.from,
-    target: conn.to,
-    animated: true,
-    style: { stroke: colors.line, strokeWidth: 2 },
-  }))
-);
-
-// 5. Extra cross-group edges
-const extraFlowEdges = extraConnections.map((conn) => ({
-  id: `${conn.from}-${conn.to}`,
-  source: conn.from,
-  target: conn.to,
-  animated: true,
-  style: { stroke: colors.line, strokeDasharray: "5,5", strokeWidth: 2 },
-}));
-
-// 6. External resource nodes & their edges
-let externalFlowNodes = [];
-let externalFlowEdges = [];
-externalResources.forEach((res, index) => {
-  if (res.processed !== "Y") return;
-  const targetId = mapSubtopicToTargetId(res.subtopic);
-  if (!targetId) return;
-  const extNodeId = `ext-${index}`;
-  externalFlowNodes.push({
-    id: extNodeId,
-    data: {
-      label: (
-        <a
-          href={res.filename}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            color: colors.text,
-            textDecoration: "none",
-            fontSize: "12px",
-          }}
-        >
-          {res.resourceType}
-        </a>
-      ),
-    },
-    position: { x: 0, y: 0 },
-    style: {
-      border: `1px solid ${colors.border}`,
-      backgroundColor: colors.externalNode,
-      padding: 6,
-      borderRadius: 4,
-      fontSize: "12px",
-    },
-  });
-  externalFlowEdges.push({
-    id: `${targetId}-${extNodeId}`,
-    source: targetId,
-    target: extNodeId,
-    animated: true,
-    style: { stroke: colors.line, strokeDasharray: "2,2", strokeWidth: 1 },
-  });
-});
-
-// Position external nodes relative to their target nodes
-const targetPositions = {};
-[...topicNodes, ...groupNodes].forEach((node) => {
-  targetPositions[node.id] = node.position;
-});
-externalFlowNodes = externalFlowNodes.map((node) => {
-  const edge = externalFlowEdges.find((e) => e.target === node.id);
-  if (edge && targetPositions[edge.source]) {
-    const base = targetPositions[edge.source];
-    return {
-      ...node,
-      position: { x: base.x + 150, y: base.y + 20 },
-    };
-  }
-  return node;
-});
-
-// 7. Additional sequential edges between group nodes
+// 4. Optional: Connect parent nodes in a chain for a vertical flow
 const groupSequentialEdges = [];
 for (let i = 0; i < courseData.length - 1; i++) {
   groupSequentialEdges.push({
@@ -371,18 +234,12 @@ for (let i = 0; i < courseData.length - 1; i++) {
   });
 }
 
-// Merge all nodes and edges
-const flowNodes = [...groupNodes, ...topicNodes, ...externalFlowNodes];
-const flowEdges = [
-  ...groupTopicEdges,
-  ...intraGroupEdges,
-  ...extraFlowEdges,
-  ...externalFlowEdges,
-  ...groupSequentialEdges,
-];
+// Merge the nodes and edges
+const flowNodes = [...groupNodes, ...topicNodes];
+const flowEdges = [...groupTopicEdges, ...groupSequentialEdges];
 
 // -------------------------------------------------------------------
-// Build Mapping from Topic Node to Its Parent Group
+// Map each topic to its parent group
 // -------------------------------------------------------------------
 const topicToGroupMapping = {};
 courseData.forEach((group) => {
@@ -412,14 +269,6 @@ const getParentGroupName = (topicId) => {
   return group ? group.title : "";
 };
 
-const getExternalLinksForTopic = (topicId) => {
-  // Filter external resources that are mapped to this topic
-  return externalResources.filter((res) => {
-    const target = mapSubtopicToTargetId(res.subtopic);
-    return target === topicId && res.processed === "Y";
-  });
-};
-
 // -------------------------------------------------------------------
 // Detailed Topic Information Component
 // -------------------------------------------------------------------
@@ -427,7 +276,6 @@ const TopicDetailInfo = ({ topicId, onClose }) => {
   const topicName = getTopicName(topicId);
   const parentGroup = getParentGroupName(topicId);
   const details = topicDetails[topicId] || "No detailed information available.";
-  const links = getExternalLinksForTopic(topicId);
 
   return (
     <div
@@ -444,25 +292,7 @@ const TopicDetailInfo = ({ topicId, onClose }) => {
         Parent Topic: {parentGroup}
       </h4>
       <p style={{ color: colors.text, marginBottom: "10px" }}>{details}</p>
-      {links.length > 0 && (
-        <div style={{ marginBottom: "10px" }}>
-          <h4 style={{ color: colors.text }}>Related Resources:</h4>
-          <ul>
-            {links.map((link, idx) => (
-              <li key={idx}>
-                <a
-                  href={link.filename}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: colors.text }}
-                >
-                  {link.resourceType}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+
       <button
         onClick={onClose}
         style={{ padding: "8px 12px", cursor: "pointer" }}
@@ -477,7 +307,6 @@ const TopicDetailInfo = ({ topicId, onClose }) => {
 // Main Component: Roadmaps
 // -------------------------------------------------------------------
 const Roadmaps = () => {
-  // Left Pane: Show detailed info for selected topic (initially none)
   const [selectedTopic, setSelectedTopic] = useState(null);
 
   // When a node is clicked, update the selected topic (only one at a time)
@@ -505,7 +334,7 @@ const Roadmaps = () => {
       </h1>
       <div style={{ display: "flex", gap: "20px" }}>
         {/* Left Pane: Detailed Topic Information */}
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 0.5 }}>
           {selectedTopic ? (
             <TopicDetailInfo
               topicId={selectedTopic}
@@ -531,8 +360,8 @@ const Roadmaps = () => {
         {/* Right Pane: Interactive Flowchart */}
         <div
           style={{
-            flex: 1,
-            height: "600px",
+            flex: 1.5,
+            height: "700px",
             border: `1px solid ${colors.border}`,
             borderRadius: "4px",
           }}
