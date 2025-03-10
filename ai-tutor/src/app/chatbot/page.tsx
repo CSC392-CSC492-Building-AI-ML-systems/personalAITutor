@@ -117,7 +117,7 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-white">
       <div className="flex flex-1 overflow-hidden">
         
         {/* Sidebar */}
