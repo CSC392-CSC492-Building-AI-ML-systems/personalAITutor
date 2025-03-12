@@ -1,9 +1,16 @@
 from flask import Blueprint, request, jsonify
-from models import User, Question
-from __init__ import db, bcrypt
-from flask_jwt_extended import create_access_token, jwt_required, unset_jwt_cookies, get_jwt_identity
+from models import *
+from __init__ import db, bcrypt, jwt
+from flask_jwt_extended import create_access_token, get_jwt, jwt_required, unset_jwt_cookies, get_jwt_identity
 
 auth = Blueprint('auth', __name__)
+
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool:
+    jti = jwt_payload["jti"]
+    token = db.session.query(TokenBlocklist.id).filter_by(jti=jti).scalar()
+
+    return token is not None
 
 @auth.route('/register', methods=['POST'])
 def register():
@@ -34,9 +41,14 @@ def login():
 @jwt_required()
 def logout():
     try:
-        response = jsonify({"message": "User logged out successfully"})
-        unset_jwt_cookies(response)
-        return response, 200
+        jti = get_jwt()["jti"]
+        now = datetime.now(timezone.utc)
+        db.session.add(TokenBlocklist(jti=jti, created_at=now))
+        db.session.commit()
+        return jsonify(msg="JWT revoked")
+        # response = jsonify({"message": "User logged out successfully"})
+        # unset_jwt_cookies(response)
+        # return response, 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -64,7 +76,9 @@ def delete_user():
     user_id = get_jwt_identity()
     try:
         # Delete all questions and answers for the authenticated user
-        delete_questions()
+        response = delete_questions()
+        if response[1] != 200:
+            return response
         # Delete the user
         User.query.filter_by(username=user_id).delete()
         db.session.commit()
