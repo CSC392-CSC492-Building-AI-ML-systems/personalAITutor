@@ -4,6 +4,9 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
 import os
 import dotenv
+from datetime import timedelta
+
+ACCESS_EXPIRES = timedelta(hours=1)
 
 # Initialize Flask extensions
 db = SQLAlchemy()
@@ -13,6 +16,8 @@ jwt = JWTManager()
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')
+
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = ACCESS_EXPIRES
 
     # Initialize Flask extensions with the app
     db.init_app(app)
