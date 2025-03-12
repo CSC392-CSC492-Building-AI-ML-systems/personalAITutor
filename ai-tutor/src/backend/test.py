@@ -26,7 +26,13 @@ class FlaskAppTestCase(unittest.TestCase):
             db.session.remove()
             db.drop_all()
 
-    def test_user_flow(self):
+    def test_access_flowchart_without_registering(self):
+        # Try to access the flowchart without registering
+        response = self.client.get("/get-flowchart")
+        print("Access Flowchart without Registering:", response.get_json())
+        self.assertEqual(response.status_code, 401)
+
+    def test_register_login_logout(self):
         # 1. Register a new user
         register_payload = {
             "username": "newuser",
@@ -58,10 +64,14 @@ class FlaskAppTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Prepare auth headers using the received token
-        auth_headers = {
+        return {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {access_token}"
         }
+
+
+    def test_user_flow(self):
+        auth_headers = self.test_register_login_logout()
 
         # 3. Ask a question
         # question_payload = {
@@ -91,6 +101,19 @@ class FlaskAppTestCase(unittest.TestCase):
         response = self.client.delete("/auth/delete-user", headers=auth_headers)
         print("Delete User:", response.get_json())
         self.assertEqual(response.status_code, 200)
+
+    def test_register_login_logout_access_flowchart(self):
+        auth_headers = self.test_register_login_logout()
+
+        # 3. Logout
+        response = self.client.post("/auth/logout", headers=auth_headers)
+        print("Logout:", response.get_json())
+        self.assertEqual(response.status_code, 200)
+
+        # 4. Try to access the flowchart
+        response = self.client.get("/get-flowchart", headers=auth_headers)
+        print("Access Flowchart after Logout:", response.get_json())
+        self.assertEqual(response.status_code, 401)
 
 if __name__ == '__main__':
     unittest.main()
