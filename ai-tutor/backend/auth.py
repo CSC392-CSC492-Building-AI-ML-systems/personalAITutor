@@ -53,14 +53,10 @@ def logout():
         return jsonify({"error": str(e)}), 500
 
 
-@auth.route('/delete-questions', methods=['DELETE'])
+@auth.route('/delete-questions/<course_name>', methods=['DELETE'])
 @jwt_required()
-def delete_questions():
+def delete_questions(course_name):
     user_id = get_jwt_identity()
-    course_name = request.args.get('course_name')
-
-    if not course_name:
-        return jsonify({"error": "course_name is required"}), 400
 
     try:
         # Check if there are any questions to delete for the specified course
