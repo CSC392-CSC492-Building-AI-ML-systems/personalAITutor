@@ -3,7 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
 import os
-import dotenv
 from datetime import timedelta
 
 ACCESS_EXPIRES = timedelta(hours=1)
@@ -25,7 +24,7 @@ def create_app():
     jwt.init_app(app)
 
     # Load environment variables
-    dotenv.load_dotenv("env.txt")
+    # dotenv.load_dotenv("env.txt")
     os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
     with app.app_context():
