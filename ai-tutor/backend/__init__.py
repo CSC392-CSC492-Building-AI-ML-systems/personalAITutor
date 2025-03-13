@@ -30,10 +30,12 @@ def create_app():
         from main import main as main_blueprint
         from auth import auth as auth_blueprint
         from courses import courses as courses_blueprint
+        from populate_courses import populate_courses as populate_courses_blueprint
 
         app.register_blueprint(main_blueprint)
         app.register_blueprint(auth_blueprint, url_prefix='/auth')
         app.register_blueprint(courses_blueprint, url_prefix='/courses')
+        app.register_blueprint(populate_courses_blueprint)
 
         db.create_all()
 
