@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from models import Question, user_courses
+from models import *
 from __init__ import db
 import os
 import requests
@@ -69,17 +69,3 @@ def ask():
         return jsonify({"answer": answer_text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
-@main.route('/get-flowchart/<course_code>', methods=['GET'])
-@jwt_required()
-def get_flowchart(course_code):
-    file_path = f'assets/{course_code}_flowchart.txt'
-    try:
-        with open(file_path, 'r') as file:
-            content = file.read()
-        return content
-    except FileNotFoundError:
-        return jsonify({"error": "Flowchart not found"}), 404
-    except Exception as e:
-        return str(e), 500

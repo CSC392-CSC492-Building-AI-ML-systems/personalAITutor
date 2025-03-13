@@ -29,9 +29,11 @@ def create_app():
     with app.app_context():
         from main import main as main_blueprint
         from auth import auth as auth_blueprint
+        from courses import courses as courses_blueprint
 
         app.register_blueprint(main_blueprint)
         app.register_blueprint(auth_blueprint, url_prefix='/auth')
+        app.register_blueprint(courses_blueprint, url_prefix='/courses')
 
         db.create_all()
 
