@@ -20,6 +20,7 @@ COPY main.py .
 COPY models.py .
 COPY populate_courses.py .
 COPY assets/ ./assets
+COPY migrations/ ./migrations
 
 # Set environment variables
 ENV FLASK_APP=app.py
