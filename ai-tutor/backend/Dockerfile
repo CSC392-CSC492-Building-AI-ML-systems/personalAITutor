@@ -11,12 +11,15 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code into the container
+COPY __init__.py .
 COPY app.py .
 COPY auth.py .
-COPY flowchart.txt .
+COPY courses.py .
+COPY Dockerfile .
 COPY main.py .
 COPY models.py .
-COPY Dockerfile .
+COPY update_courses.py .
+COPY /assets .
 
 # Set environment variables
 ENV FLASK_APP=app.py
