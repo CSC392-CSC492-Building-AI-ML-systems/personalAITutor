@@ -24,7 +24,7 @@ def add_user_to_course(course_code):
     user_id = get_jwt_identity()
 
     # Check if the user is already enrolled in the course
-    enrollment = user_courses.query.filter_by(user_id=user_id, course_name=course_code).first()
+    enrollment = db.session.query(user_courses).filter_by(user_id=user_id, course_name=course_code).first()
     if enrollment:
         return jsonify({"error": "User already enrolled in the course"}), 400
 
