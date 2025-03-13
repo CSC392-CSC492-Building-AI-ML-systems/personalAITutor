@@ -1,0 +1,30 @@
+services:
+  rag_service:
+    build: ./backend/rag_service
+    environment:
+      - NEO4J_URI=uri
+      - NEO4J_USERNAME=neo4j
+      - NEO4J_PASSWORD=password
+      - OPENAI_API_KEY=key
+    networks:
+      - internal_network
+
+  backend:
+    build: ./backend
+    ports:
+      - "7000:7000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URI=sqlite:///database.db
+      - JWT_SECRET_KEY=secret
+      - RAG_SERVICE_URL=http://rag_service:6000
+    depends_on:
+      - rag_service
+    networks:
+      - internal_network
+
+networks:
+  internal_network:
+    driver: bridge
