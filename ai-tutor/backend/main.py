@@ -54,7 +54,8 @@ def ask():
         question = Question(
             user_id=user_id,
             question_text=question_text,
-            answer_text=answer_text
+            answer_text=answer_text,
+            course_id=course_id
         )
         db.session.add(question)
         db.session.commit()
@@ -63,12 +64,15 @@ def ask():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@main.route('/get-flowchart', methods=['GET'])
+@main.route('/get-flowchart/<course_code>', methods=['GET'])
 @jwt_required()
-def get_flowchart():
+def get_flowchart(course_code):
+    file_path = f'assets/{course_code}_flowchart.txt'
     try:
-        with open('flowchart.txt', 'r') as file:
+        with open(file_path, 'r') as file:
             content = file.read()
         return content
+    except FileNotFoundError:
+        return jsonify({"error": "Flowchart not found"}), 404
     except Exception as e:
         return str(e), 500
