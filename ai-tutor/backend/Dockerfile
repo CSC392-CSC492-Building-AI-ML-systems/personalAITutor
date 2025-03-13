@@ -18,8 +18,8 @@ COPY courses.py .
 COPY Dockerfile .
 COPY main.py .
 COPY models.py .
-COPY update_courses.py .
-COPY /assets .
+COPY populate_courses.py .
+COPY assets/ ./assets
 
 # Set environment variables
 ENV FLASK_APP=app.py
