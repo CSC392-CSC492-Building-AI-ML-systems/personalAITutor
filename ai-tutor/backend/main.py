@@ -19,26 +19,22 @@ limiter = Limiter(
 def get_rag_service_url(course_code):
     return os.getenv(f"RAG_SERVICE_COURSE_{course_code}_URL")
 
-@main.route('/ask', methods=['POST'])
+@main.route('/ask/<course_code>', methods=['POST'])
 @jwt_required()
 @limiter.limit("5 per minute", key_func=get_jwt_identity)
-def ask():
+def ask(course_code):
     data = request.get_json()
     if not data or 'question' not in data:
         return jsonify({"error": "No question provided"}), 400
 
-    course_name = request.args.get('course_name')
-    if not course_name:
-        return jsonify({"error": "No course_name provided"}), 400
-
     user_id = get_jwt_identity()
 
     # Check if the user is enrolled in the course
-    enrollment = user_courses.query.filter_by(user_id=user_id, course_name=course_name).first()
+    enrollment = user_courses.query.filter_by(user_id=user_id, course_name=course_code).first()
     if not enrollment:
         return jsonify({"error": "User not enrolled in the course"}), 403
 
-    rag_service_url = get_rag_service_url(course_name)
+    rag_service_url = get_rag_service_url(course_code)
     if not rag_service_url:
         return jsonify({"error": "Invalid course_name"}), 400
 
@@ -61,7 +57,7 @@ def ask():
             user_id=user_id,
             question_text=question_text,
             answer_text=answer_text,
-            course_name=course_name
+            course_name=course_code
         )
         db.session.add(question)
         db.session.commit()
