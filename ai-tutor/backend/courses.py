@@ -54,3 +54,25 @@ def get_user_courses():
         return jsonify({"courses": course_list}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@courses.route('/drop-course', methods=['DELETE'])
+@jwt_required()
+def drop_course():
+    user_id = get_jwt_identity()
+    course_name = request.args.get('course_name')
+
+    if not course_name:
+        return jsonify({"error": "course_name is required"}), 400
+
+    try:
+        # Delete all questions for the authenticated user and specified course
+        Question.query.filter_by(user_id=user_id, course_name=course_name).delete()
+
+        # Delete the user's enrollment in the course
+        user_courses.query.filter_by(user_id=user_id, course_name=course_name).delete()
+
+        db.session.commit()
+        return jsonify({"message": "Course dropped and all associated questions deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
