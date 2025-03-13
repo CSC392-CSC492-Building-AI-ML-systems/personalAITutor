@@ -7,20 +7,10 @@
   --foreground: #171717;
 }
 
-/* commenting out since dark mode is not configured yet
-/* @media (prefers-color-scheme: dark) {
+/* commenting out since dark mode is not configured yet */
+@media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-} */
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  overflow: scroll;
 }
