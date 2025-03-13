@@ -64,57 +64,71 @@ export default function Chatbot() {
 
   const sendMessage = async () => {
     if (!input.trim()) return;
-
+  
     if (!selectedCourse) {
       setCourseError("Please add a chatbot for a course before sending a message.");
       return;
     }
-
+  
     setMessages((prev) => ({
       ...prev,
       [selectedCourse]: [...(prev[selectedCourse] || []), { text: input, sender: "user" }],
     }));
-
+  
     scrollToBottom();
-
+  
     setMessages((prev) => ({
       ...prev,
       [selectedCourse]: [...prev[selectedCourse], { text: "...", sender: "bot" }],
     }));
-
+  
     setInput("");
-
+  
     try {
-      const response = await fetch(`/api/chat?course=${selectedCourse}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
-      });
-
-      const reader = response.body?.getReader();
-      if (!reader) return;
-
-      const decoder = new TextDecoder();
-      let aiMessage = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        aiMessage += decoder.decode(value, { stream: true });
-
-        setMessages((prev) => ({
-          ...prev,
-          [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: aiMessage, sender: "bot" }],
-        }));
+      // Get JWT token 
+      const token = localStorage.getItem("jwt_token");
+      if (!token) {
+        throw new Error("User not authenticated. Please log in.");
       }
-    } catch (error) {
-      console.error("Error sending message", error);
+  
+      const response = await fetch("http://localhost:5000/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Include JWT token
+        },
+        body: JSON.stringify({
+          question: input,
+          retriever_type: "HybridRetriever", // Default retriever type
+        }),
+      });
+  
+      if (response.status === 401) {
+        throw new Error("Unauthorized. Please log in again.");
+      }
+      if (response.status === 429) {
+        throw new Error("Rate limit exceeded. Please wait and try again.");
+      }
+  
+      const data = await response.json();
+  
+      if (data.error) {
+        throw new Error(data.error);
+      }
+  
+      // Update messages with bot's response
       setMessages((prev) => ({
         ...prev,
-        [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: "Error generating response. Please try again.", sender: "bot" }],
+        [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: data.answer, sender: "bot" }],
+      }));
+    } catch (error: any) {
+      console.error("Error sending message:", error);
+      setMessages((prev) => ({
+        ...prev,
+        [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: error.message, sender: "bot" }],
       }));
     }
-  };
+  };  
 
   return (
     <div className="h-screen flex flex-col bg-white">
