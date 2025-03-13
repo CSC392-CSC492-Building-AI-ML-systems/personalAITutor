@@ -73,10 +73,9 @@ class FlaskAppTestCase(unittest.TestCase):
     def test_user_flow(self):
         auth_headers = self.test_register_login_logout()
 
-        # 3. Ask a question
+        # # 3. Ask a question
         # question_payload = {
-        #     "question": "Describe the differences between the observer and iterator patterns?",
-        #     "retriever_type": "HybridRetriever"
+        #     "question": "Describe the differences between the observer and iterator patterns?"
         # }
         # response = self.client.post(
         #     "/ask",
