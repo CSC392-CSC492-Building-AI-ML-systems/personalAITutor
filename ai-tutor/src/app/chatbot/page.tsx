@@ -138,13 +138,13 @@ export default function Chatbot() {
         <aside className="w-1/4 border-r p-4 bg-white">
           <h1 className="relative text-5xl uppercase w-fit mx-auto">
             <span className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-6 w-full bg-[#E9F3DA]"></span>
-            <span className="relative font-mono">CHATBOT</span>
+            <span className="relative">CHATBOT</span>
           </h1>
           <div className="flex flex-col space-y-2 mt-6">
             {sidebarCourses.map((course) => (
               <button
                 key={course}
-                className={`p-3 rounded-md text-center font-mono text-2xl ${
+                className={`p-3 rounded-md text-center text-2xl ${
                   selectedCourse === course ? "font-semibold" : ""
                 }`}
                 style={selectedCourse === course ? { backgroundColor: "#FFF0D2" } : { backgroundColor: "#FAFAEB" }}
@@ -165,7 +165,7 @@ export default function Chatbot() {
           <div ref={chatRef} className="flex-1 p-4 overflow-y-auto min-h-0">
             {(messages[selectedCourse!] || []).map((msg, index) => (
               <div key={index} className={`mb-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`p-3 font-mono rounded-lg max-w-xs ${msg.sender === "user" ? "bg-yellow-100" : "bg-[#E9F3DA]"}`}>
+                <div className={`p-3 rounded-lg max-w-xs ${msg.sender === "user" ? "bg-yellow-100" : "bg-[#E9F3DA]"}`}>
                   {msg.text}
                 </div>
               </div>
@@ -194,7 +194,7 @@ export default function Chatbot() {
               
               {/* Send Button (Inside Input) */}
               <button
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
+                className="text-3xl absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
                 onClick={sendMessage}
               > 
                 ➤
