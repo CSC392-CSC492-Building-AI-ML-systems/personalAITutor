@@ -16,7 +16,8 @@ limiter = Limiter(
     storage_uri="sqlalchemy:///backend/database.db"
 )
 
-RAG_SERVICE_URL = os.getenv("RAG_SERVICE_URL")
+def get_rag_service_url(course_code):
+    return os.getenv(f"RAG_SERVICE_COURSE_{course_code}_URL")
 
 @main.route('/ask', methods=['POST'])
 @jwt_required()
@@ -26,13 +27,21 @@ def ask():
     if not data or 'question' not in data:
         return jsonify({"error": "No question provided"}), 400
 
+    course_id = request.args.get('course_id')
+    if not course_id:
+        return jsonify({"error": "No course_id provided"}), 400
+
+    rag_service_url = get_rag_service_url(course_id)
+    if not rag_service_url:
+        return jsonify({"error": "Invalid course_id"}), 400
+
     question_text = data['question']
     user_id = get_jwt_identity()
 
     try:
         # Call the rag_service API
         response = requests.post(
-            f"{RAG_SERVICE_URL}/ask",
+            f"{rag_service_url}/ask",
             json={"question": question_text}
         )
 
