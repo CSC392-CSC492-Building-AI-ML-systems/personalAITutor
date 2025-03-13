@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from models import Question
+from models import Question, user_courses
 from __init__ import db
 import os
 import requests
@@ -27,16 +27,22 @@ def ask():
     if not data or 'question' not in data:
         return jsonify({"error": "No question provided"}), 400
 
-    course_id = request.args.get('course_id')
-    if not course_id:
-        return jsonify({"error": "No course_id provided"}), 400
+    course_name = request.args.get('course_name')
+    if not course_name:
+        return jsonify({"error": "No course_name provided"}), 400
 
-    rag_service_url = get_rag_service_url(course_id)
+    user_id = get_jwt_identity()
+
+    # Check if the user is enrolled in the course
+    enrollment = user_courses.query.filter_by(user_id=user_id, course_name=course_name).first()
+    if not enrollment:
+        return jsonify({"error": "User not enrolled in the course"}), 403
+
+    rag_service_url = get_rag_service_url(course_name)
     if not rag_service_url:
-        return jsonify({"error": "Invalid course_id"}), 400
+        return jsonify({"error": "Invalid course_name"}), 400
 
     question_text = data['question']
-    user_id = get_jwt_identity()
 
     try:
         # Call the rag_service API
@@ -55,7 +61,7 @@ def ask():
             user_id=user_id,
             question_text=question_text,
             answer_text=answer_text,
-            course_id=course_id
+            course_name=course_name
         )
         db.session.add(question)
         db.session.commit()
@@ -63,6 +69,7 @@ def ask():
         return jsonify({"answer": answer_text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @main.route('/get-flowchart/<course_code>', methods=['GET'])
 @jwt_required()
