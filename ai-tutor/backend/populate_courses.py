@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 import json
 import os
 from models import Course
-from __init__ import db, app
+from __init__ import db
 
 VALID_API_KEY = os.getenv('VALID_API_KEY')
 
