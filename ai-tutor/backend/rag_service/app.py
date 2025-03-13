@@ -1,12 +1,13 @@
+from fastapi import FastAPI, HTTPException, Request
+from pydantic import BaseModel
 from neo4j import GraphDatabase
 from neo4j_graphrag.retrievers import HybridRetriever
 from neo4j_graphrag.llm import OpenAILLM
 from neo4j_graphrag.generation import GraphRAG
 from sentence_transformers import SentenceTransformer
 import os
-from flask import Flask, request, jsonify
 
-app = Flask(__name__)
+app = FastAPI()
 
 # Neo4j connection details
 URI = os.getenv("NEO4J_URI")
@@ -51,19 +52,19 @@ hybrid_retriever = HybridRetriever(driver, INDEX_NAME, FULLTEXT_INDEX_NAME, embe
 # Initialize the GraphRAG pipeline
 rag = GraphRAG(llm=llm, retriever=hybrid_retriever)
 
-@app.route('/ask', methods=['POST'])
-def ask():
-    data = request.get_json()
-    if not data or 'question' not in data:
-        return jsonify({"error": "No question provided"}), 400
-    question_text = data['question']
+class QuestionRequest(BaseModel):
+    question: str
+
+@app.post("/ask")
+async def ask(request: QuestionRequest):
+    question_text = request.question
     retriever_config = {"top_k": 5}
     try:
         response = rag.search(query_text=question_text, retriever_config=retriever_config)
         answer_text = response.answer
-        return jsonify({"answer": answer_text})
+        return {"answer": answer_text}
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=6000)
