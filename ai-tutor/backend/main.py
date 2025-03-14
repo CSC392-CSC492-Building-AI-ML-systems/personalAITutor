@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from models import Question
+from models import *
 from __init__ import db
 import os
 import requests
@@ -16,23 +16,34 @@ limiter = Limiter(
     storage_uri="sqlalchemy:///backend/database.db"
 )
 
-RAG_SERVICE_URL = os.getenv("RAG_SERVICE_URL")
+def get_rag_service_url(course_code):
+    return os.getenv(f"RAG_SERVICE_COURSE_{course_code}_URL")
 
-@main.route('/ask', methods=['POST'])
+@main.route('/ask/<course_code>', methods=['POST'])
 @jwt_required()
 @limiter.limit("5 per minute", key_func=get_jwt_identity)
-def ask():
+def ask(course_code):
     data = request.get_json()
     if not data or 'question' not in data:
         return jsonify({"error": "No question provided"}), 400
 
-    question_text = data['question']
     user_id = get_jwt_identity()
+
+    # Check if the user is enrolled in the course
+    enrollment = db.session.query(user_courses).filter_by(user_id=user_id, course_name=course_code).first()
+    if not enrollment:
+        return jsonify({"error": "User not enrolled in the course"}), 403
+
+    rag_service_url = get_rag_service_url(course_code)
+    if not rag_service_url:
+        return jsonify({"error": "Invalid course_name"}), 400
+
+    question_text = data['question']
 
     try:
         # Call the rag_service API
         response = requests.post(
-            f"{RAG_SERVICE_URL}/ask",
+            f"{rag_service_url}/ask",
             json={"question": question_text}
         )
 
@@ -45,7 +56,8 @@ def ask():
         question = Question(
             user_id=user_id,
             question_text=question_text,
-            answer_text=answer_text
+            answer_text=answer_text,
+            course_name=course_code
         )
         db.session.add(question)
         db.session.commit()
@@ -53,13 +65,3 @@ def ask():
         return jsonify({"answer": answer_text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-@main.route('/get-flowchart', methods=['GET'])
-@jwt_required()
-def get_flowchart():
-    try:
-        with open('flowchart.txt', 'r') as file:
-            content = file.read()
-        return content
-    except Exception as e:
-        return str(e), 500

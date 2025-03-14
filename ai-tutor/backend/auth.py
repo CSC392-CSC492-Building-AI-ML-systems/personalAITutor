@@ -52,20 +52,22 @@ def logout():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@auth.route('/delete-questions', methods=['DELETE'])
-@jwt_required()
-def delete_questions():
-    user_id = get_jwt_identity()
-    try:
-        # Check if there are any questions to delete
-        questions = Question.query.filter_by(user_id=user_id).all()
-        if not questions:
-            return jsonify({"message": "No questions to delete"}), 200
 
-        # Delete all questions for the authenticated user
-        Question.query.filter_by(user_id=user_id).delete()
+@auth.route('/delete-questions/<course_name>', methods=['DELETE'])
+@jwt_required()
+def delete_questions(course_name):
+    user_id = get_jwt_identity()
+
+    try:
+        # Check if there are any questions to delete for the specified course
+        questions = Question.query.filter_by(user_id=user_id, course_name=course_name).all()
+        if not questions:
+            return jsonify({"message": "No questions to delete for the specified course"}), 200
+
+        # Delete all questions for the authenticated user and specified course
+        Question.query.filter_by(user_id=user_id, course_name=course_name).delete()
         db.session.commit()
-        return jsonify({"message": "All questions and answers deleted successfully"}), 200
+        return jsonify({"message": "All questions and answers for the specified course deleted successfully"}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
@@ -79,8 +81,12 @@ def delete_user():
         response = delete_questions()
         if response[1] != 200:
             return response
+
+        # Delete the user's entries from user_courses
+        user_courses.query.filter_by(user_id=user_id).delete()
+
         # Delete the user
-        User.query.filter_by(username=user_id).delete()
+        User.query.filter_by(id=user_id).delete()
         db.session.commit()
         return jsonify({"message": "User and all associated entries deleted successfully"}), 200
     except Exception as e:
