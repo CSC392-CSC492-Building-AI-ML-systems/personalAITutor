@@ -1,6 +1,5 @@
 'use client'
 
-import type { Metadata } from "next";
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from "next/image";
@@ -23,11 +22,11 @@ export default function RootLayout({
             <Image className="m-3" src="logo.svg" alt="advisory logo" width={80} height={80}></Image>
           </Link>
           <Link href="/roadmaps" className='relative ml-5'>
-            <div className={pathname === '/roadmaps' ? 'absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 -mx-2 bg-[#E9F3DA]' : ''}></div>
+            <div className={pathname === '/roadmaps' ? 'absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 -mx-2 bg-[#FFF0D2]' : ''}></div>
             <div className="relative text-lg">ROADMAPS</div>
           </Link>
           <Link href="/chatbot" className="relative ml-5">
-            <div className={pathname === '/chatbot' ? 'absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 -mx-2 bg-[#E9F3DA]' : ''}></div>
+            <div className={pathname === '/chatbot' ? 'absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 -mx-2 bg-[#FFF0D2]' : ''}></div>
             <div className="relative text-lg">CHATBOT</div>
           </Link>
         </div>

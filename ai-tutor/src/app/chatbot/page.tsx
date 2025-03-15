@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import CourseDropdown from "../components/CourseDropdown";
 import { useAutoScroll } from "../hooks/autoscroll";
 
@@ -9,18 +9,29 @@ interface Message {
   sender: "user" | "bot";
 }
 
-export default function Chatbot() {
+export default function Chatbot({ 
+  searchParams
+}: {
+  searchParams: Promise<{ course: string, query: string }>;
+}) {
+
+  const { course, query } = use(searchParams);
+
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [availableCourses, setAvailableCourses] = useState<string[]>([]);
   const [sidebarCourses, setSidebarCourses] = useState<string[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
+
+  const [fromLanding, setfromLanding] = useState(false);
+
   const [input, setInput] = useState("");
   const [courseError, setCourseError] = useState<string | null>(null);
 
   const { chatRef, scrollToBottom } = useAutoScroll();
-
+  
   // Remove error message after 5 seconds
   useEffect(() => {
+
     if (courseError) {
       const timer = setTimeout(() => {
         setCourseError(null);
@@ -37,25 +48,43 @@ export default function Chatbot() {
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
 
         const data: string[] = await res.json();
-        setAvailableCourses(data);
+        setAvailableCourses(data.filter((c) => c !== course));
       } catch (error) {
         console.error("Failed to fetch courses:", error);
       }
     }
     fetchCourses();
+    if (course && query) {
+      addCourse(course);
+      setInput(query);
+      setfromLanding(true);
+    }
   }, []);
 
-  const addCourse = (course: string) => {
-    setSidebarCourses((prev) => [...prev, course]);
-    setAvailableCourses((prev) => prev.filter((c) => c !== course));
-    setSelectedCourse(course);
-    setCourseError(null); // Clear course selection error
+  useEffect(() => {
+    async function sendLandingMessage() {
+      if (query && course) {
+        try {
+          await sendMessage();
+        } catch (error) {
+          console.error("failed to send message", error);
+        }
+      }
+    }
+    sendLandingMessage();
+  }, [fromLanding]);
+
+  const addCourse = (courseToAdd: string) => {
+    setSidebarCourses((prev) => [...prev, courseToAdd]);
+    setAvailableCourses((prev) => prev.filter((c) => c !== courseToAdd));
+    setSelectedCourse(courseToAdd);
+    setCourseError(null); // Clear courseToAdd selection error
 
     setMessages((prev) => ({
       ...prev,
-      [course]: [
+      [courseToAdd]: [
         {
-          text: `Hi, I’m TutorBot, your personal AI tutor for ${course}. How can I help you?`,
+          text: `Hi, I’m TutorBot, your personal AI tutor for ${courseToAdd}. How can I help you?`,
           sender: "bot",
         },
       ],
