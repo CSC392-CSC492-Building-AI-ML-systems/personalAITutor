@@ -1,7 +1,9 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from .models import *
+from .main import get_rag_service_url
 from api_service import db
+import os
 
 courses = Blueprint('courses', __name__)
 
@@ -64,6 +66,25 @@ def get_user_courses():
         # Fetch all courses the user is enrolled in
         courses = db.session.query(Course).join(user_courses).filter(user_courses.c.user_id == user_id).all()
         course_list = [{"name": course.name, "description": course.description} for course in courses]
+        return jsonify({"courses": course_list}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@courses.route('/', methods=['GET'])
+def get_available_courses():
+    try:
+        courses = db.session.query(Course).all()
+        course_list = []
+        for course in courses:
+            course_code = course.name.upper()
+            roadmap_exists = os.path.isfile(f'assets/{course_code}_flowchart.txt')
+            chatbot_exists = bool(get_rag_service_url(course_code))
+            course_list.append({
+                "name": course.name,
+                "description": course.description,
+                "has_roadmap": roadmap_exists,
+                "has_chatbot": chatbot_exists
+            })
         return jsonify({"courses": course_list}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
