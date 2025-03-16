@@ -1,4 +1,7 @@
 .DS_Store
 env.txt
+<<<<<<< HEAD
 docker-compose.yml
+=======
+>>>>>>> aac5ed6 ( resolved conflicts)
 __pycache__/
