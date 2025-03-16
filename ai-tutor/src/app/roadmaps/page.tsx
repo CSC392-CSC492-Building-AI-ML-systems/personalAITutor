@@ -783,7 +783,7 @@ const TopicDetailInfo = ({ topicId, onClose }) => {
     );
   }
 
-  // Domain counters for unique numbering per node
+  // Domain counters for unique numbering per domain
   const domainCounts = {};
 
   return (
@@ -815,7 +815,7 @@ const TopicDetailInfo = ({ topicId, onClose }) => {
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: "blue" }}
+                  style={{ color: colors.text }}
                 >
                   {`${title} Link ${domainCounts[domain]}`}
                 </a>
@@ -829,7 +829,14 @@ const TopicDetailInfo = ({ topicId, onClose }) => {
         <ul>
           {topicData.internal.map((item, index) => (
             <li key={index} style={{ color: colors.text }}>
-              {item.path} (Pages: {item.page})
+              <a
+                href={`../${item.path}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: colors.text }}
+              >
+                {item.path.split("/").pop()}
+              </a>
             </li>
           ))}
         </ul>
