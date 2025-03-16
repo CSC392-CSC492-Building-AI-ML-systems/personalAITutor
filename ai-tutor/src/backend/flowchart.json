@@ -1,119 +1,324 @@
 {
   "Week 1": [
-    { 
-      "topic": "Basic Java Syntax", 
-      "external": [], 
-      "internal": [] 
-    },
-    { 
-      "topic": "Java Primitive Types", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "Java Objects", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "Classes", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "Inheritance", 
-      "external": [], 
-      "internal": [] }
-  ],
-  "Week 2": [
-    { 
-      "topic": "Interfaces", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "File I/O", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "Overriding/Shadowing", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "Object Oriented Design Principles", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "SOLID", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "super", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "final", 
-      "external": [], 
-      "internal": [] }
-  ],
-  "Week 3": [
-    { 
-      "topic": "Parametric Polymorphism", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "Exceptions", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "User Stories", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "Git", 
-      "external": [], 
-      "internal": [] }
-  ],
-  "Week 4": [
-    { 
-      "topic": "Software Engineering Processes", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "Waterfall", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "Agile", 
-      "external": [
-        "https://www.geeksforgeeks.org/software-engineering-agile-software-development/",
-        "https://www.geeksforgeeks.org/what-is-agile-methodology/",
-        "https://www.geeksforgeeks.org/agile-software-process-and-its-principles/",
-        "https://www.pmi.org/disciplined-agile/agile/theagilemanifesto",
-        "https://learn.microsoft.com/en-us/devops/plan/what-is-agile",
-        "https://www.coursera.org/articles/what-is-agile-a-beginners-guide",
-        "https://www.geeksforgeeks.org/test-driven-development-tdd/",
-        "https://www.agilealliance.org/glossary/tdd/",
-        "https://developer.ibm.com/articles/5-steps-of-test-driven-development/"
-      ], 
-      "internal": [
-        {
-          "path": "path/to/file",
-          "page": 3
-        }, 
-        {
-          "path": "path/to/file",
-          "page": 5
-        }
-      ] },
-    { 
-      "topic": "Scrum", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "CRC", 
-      "external": [], 
-      "internal": [] },
-    { 
-      "topic": "UML Diagrams", 
-      "external": [], 
-      "internal": [] }
+        { 
+          "topic": "Basic Java Syntax", 
+          "external": [
+            "https://www.youtube.com/watch?v=eIrMbAQSU34&t=106s&ab_channel=ProgrammingwithMosh",
+            "https://www.youtube.com/watch?v=xk4_1vDrzzo"
+          ], 
+          "internal": [
+            {
+              "path": "resources/video_slides/week1-video-slides.pdf",
+              "page": "2-27, 31-36"
+            }
+          ] 
+        },
+        { 
+          "topic": "Java Primitive Types", 
+          "external": [
+            "https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html",
+            "https://www.geeksforgeeks.org/data-types-in-java/",
+            "https://www.javatpoint.com/type-casting-in-java"
+          ], 
+          "internal": [
+            {
+              "path": "resources/video_slides/week1-video-slides.pdf",
+              "page": "14-18"
+            }
+          ] },
+        { 
+          "topic": "Java Objects", 
+          "external": [
+            "https://www.baeldung.com/java-generics",
+            "https://www.geeksforgeeks.org/classes-objects-java/?ref=ml_lbp#:~:text=GeeksForGeeks-,Java%20Objects,-An%20object%20in"
+          ], 
+          "internal": [
+            {
+              "path": "resources/video_slides/week1-video-slides.pdf",
+              "page": "19-24"
+            }
+          ] },
+        { 
+          "topic": "Classes", 
+          "external": [
+            "https://www.geeksforgeeks.org/types-of-classes-in-java/",
+            "https://www.geeksforgeeks.org/classes-objects-java/?ref=ml_lbp#:~:text=Mercedes%2C%20Ferrari%2C%20etc.-,Java%20Classes,-A%20class%20in"
+          ], 
+          "internal": [
+            {
+              "path": "resources/video_slides/week1-video-slides.pdf",
+              "page": "25-27"
+            }
+          ] },
+        { 
+          "topic": "Inheritance", 
+          "external": [
+            "https://www.w3schools.com/java/java_inheritance.asp",
+            "https://www.geeksforgeeks.org/inheritance-in-java/",
+            "https://docs.oracle.com/javase/tutorial/java/IandI/subclasses.html#:~:text=all%20JDK%20releases.-,Inheritance,-In%20the%20preceding"
+          ], 
+          "internal": [
+            {"path": "resources/video_slides/week1-video-slides.pdf",
+              "page": "28-30"
+            },
+            {
+                "path": "resources/video_slides/week2-video-slides.pdf",
+                "page": "2"
+            }
+          ] }
+      ],
+      "Week 2": [
+        { 
+          "topic": "Interfaces", 
+          "external": [
+            "https://www.geeksforgeeks.org/videos/comparable-interface-in-java-with-examples/",
+            "https://docs.oracle.com/javase/8/docs/api/java/lang/Comparable.html",
+            "https://www.geeksforgeeks.org/difference-between-abstract-class-and-interface-in-java/#:~:text=Avinash%0A21%0A222.2-,Interface%20in%20Java,-1.%20Definition%3A",
+            "https://www.baeldung.com/java-interface-vs-abstract-class#:~:text=4.-,When%20to%20Use%20an%20Interface,-Let%E2%80%99s%20look%20at",
+            "https://stackoverflow.com/questions/10040069/abstract-class-vs-interface-in-java#:~:text=blog%20post%3A-,Interface%3A,-A%20class%20can",
+            "https://stackoverflow.com/questions/10040069/abstract-class-vs-interface-in-java#:~:text=95-,When%20To%20Use%20Interfaces,-An%20interface%20allows"
+
+          ], 
+          "internal": [
+            {
+              "path": "resources/video_slides/week2-video-slides.pdf",
+              "page": "3-13"
+            }
+          ] },
+        { 
+          "topic": "File I/O", 
+          "external": [
+            "https://www.geeksforgeeks.org/java-io-tutorial/",
+            "https://www.geeksforgeeks.org/file-handling-in-java/",
+            "https://docs.oracle.com/javase/tutorial/essential/io/#:~:text=O%20of%20objects.-,File%20I/O%20(Featuring%20NIO.2),-What%20is%20a"
+          ], 
+          "internal": [
+            {
+              "path": "resources/video_slides/week2-video-slides.pdf",
+              "page": "15-19"
+            }
+          ] },
+        { 
+          "topic": "Overriding/Shadowing", 
+          "external": [
+            "https://www.geeksforgeeks.org/method-overloading-in-java/",
+            "https://beginnersbook.com/2014/01/method-overriding-in-java-with-example/",
+            "https://www.geeksforgeeks.org/shadowing-in-java/"
+          ], 
+          "internal": [
+            {
+              "path": "resources/video_slides/week2-video-slides.pdf",
+              "page": "22-40"
+            }
+          ] },
+        { 
+          "topic": "Object Oriented Design Principles", 
+          "external": [
+            "https://cspages.ucalgary.ca/~tam/2014/233W/notes/acrobat/intro_OO.pdf",
+            "https://homepage.divms.uiowa.edu/~slonnegr/oosd/22OOP.pdf",
+            "https://pages.cs.wisc.edu/~cs302-5/resources/18_CS302_IntroOOP.pdf",
+            "https://www.teach.cs.toronto.edu/~csc207h/summer/lectures/week11/design_principles.pdf",
+            "https://homepage.divms.uiowa.edu/~sgoddard/Courses/CS2820/Lectures/14-OOD-Principles.pdf",
+            "https://people.engr.tamu.edu/choe/choe/courses/20fall/315/lectures/slide23-solid.pdf",
+            "https://www.geeksforgeeks.org/introduction-of-object-oriented-programming/",
+            "https://brilliant.org/wiki/object-oriented-programming/",
+            "https://www.geeksforgeeks.org/python-oops-concepts/",
+            "https://www.oracle.com/java/technologies/oop.html",
+            "https://www.coursera.org/learn/concepts-of-object-oriented-programming",
+            "https://www.geeksforgeeks.org/oops-object-oriented-design/",
+            "https://www.geeksforgeeks.org/solid-principle-in-programming-understand-with-real-life-examples/",
+            "https://www.baeldung.com/solid-principles",
+            "https://www.youtube.com/watch?v=SiBw7os-_zI",
+            "https://www.youtube.com/watch?v=JeznW_7DlB0",
+            "https://www.youtube.com/watch?v=m_MQYyJpIjg"
+          ], 
+          "internal": [
+            {
+              "path": "/resources/lecture_slides/week2-lecture-slides.pdf",
+              "page": "8-23"
+            }
+          ] },
+        { 
+          "topic": "SOLID", 
+          "external": [
+            "https://www.baeldung.com/solid-principles#why:~:text=The%20Reason%20for%20SOLID%20Principles",
+            "https://www.geeksforgeeks.org/solid-principle-in-programming-understand-with-real-life-examples/"
+            ], 
+          "internal": [
+            {
+              "path": "/resources/lecture_slides/week2-lecture-slides.pdf",
+              "page": "8-23"
+            }
+          ] },
+        { 
+          "topic": "super", 
+          "external": [
+            "https://www.geeksforgeeks.org/super-keyword/",
+            "https://docs.oracle.com/javase/tutorial/java/IandI/super.html#:~:text=all%20JDK%20releases.-,Using%20the%20Keyword%20super,-Accessing%20Superclass%20Members",
+            "https://www.programiz.com/java-programming/super-keyword"
+          ], 
+          "internal": [
+            {
+              "path": "resources/video_slides/week2-video-slides.pdf",
+              "page": "22-23"
+            }
+          ] },
+        { 
+          "topic": "final", 
+          "external": [
+            "https://www.w3schools.com/java/java_inheritance.asp#:~:text=perform%20different%20tasks.-,The%20final%20Keyword,-If%20you%20don%27t"
+          ], 
+          "internal": [
+            {
+              "path": "resources/video_slides/week2-video-slides.pdf",
+              "page": "26"
+            }
+          ] }
+      ],
+      "Week 3": [
+        { 
+          "topic": "Parametric Polymorphism", 
+          "external": [
+            "https://www.w3schools.com/java/java_polymorphism.asp"
+          ], 
+          "internal": [
+            {
+              "path": "resources/video_slides/week3-video-slides.pdf",
+              "page": "2-8"
+            }
+          ] },
+        { 
+          "topic": "Exceptions", 
+          "external": [
+            "https://www.geeksforgeeks.org/exceptions-in-java/",
+            "https://www.programiz.com/java-programming/exception-handling"
+
+
+          ], 
+          "internal": [
+            {
+              "path": "resources/video_slides/week3-video-slides.pdf",
+              "page": "9-24"
+            }
+          ] },
+        { 
+          "topic": "User Stories", 
+          "external": [
+            "https://www.geeksforgeeks.org/user-stories-in-agile-software-development/",
+              "https://www.visual-paradigm.com/guide/agile-software-development/what-is-user-story/",
+              "https://www.interaction-design.org/literature/topics/user-stories",
+              "https://www.agilealliance.org/glossary/user-stories/",
+              "https://www.geeksforgeeks.org/what-is-a-user-story-in-agile/"
+          ], 
+          "internal": [
+            {
+              "path": "resources/video_slides/week3-video-slides.pdf",
+              "page": "30-31"
+            },
+            {
+              "path":"resources/video_slides/week4-video-slides.pdf",
+              "page": "7-10"
+            }
+          ] },
+        { 
+          "topic": "Git", 
+          "external": [
+            "https://www.geeksforgeeks.org/basics-of-git/",
+            "https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control#",
+            "https://git-scm.com/book/en/v2/Getting-Started-Installing-Git",
+            "https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup",
+            "https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging", 
+            "https://www.geeksforgeeks.org/branching-strategies-in-git/", 
+            "https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell ",
+            "https://git-scm.com/docs/git-branch ", 
+            "https://gitscripts.com/git-branching-strategy-for-multiple-environments",
+            "https://git.github.io/git-reference/branching/", 
+            "https://www.geeksforgeeks.org/git-flow/",
+            "https://www.youtube.com/watch?v=e9lnsKot_SQ",
+            "https://www.youtube.com/watch?v=Sqsz1-o7nXk", 
+            "https://www.youtube.com/watch?v=USjZcfj8yxE"
+
+          ], 
+          "internal": [
+            {
+              "path": "/resources/lecture_slides/git.pdf",
+              "page": "3-5"
+            },
+            {
+              "path":"/resources/lecture_slides/week3-lecture-slides.pdf",
+              "page": "17-30"
+            }
+          ] }
+      ],
+      "Week 4": [
+        { 
+          "topic": "Software Engineering Processes", 
+          "external": [
+            "https://www.geeksforgeeks.org/software-processes-in-software-engineering/#:~:text=to%20Software%20Processes-,What%20are%20Software%20Processes%3F,-Software%20processes%20in",
+            "https://www.computer.org/resources/software-engineering-process#:~:text=DOWNLOAD%20SWEBOK-,Software%20Engineering%20Process%20Fundamentals,-What%20is%20the"
+          ], 
+          "internal": [] },
+        { 
+          "topic": "Waterfall", 
+          "external": [
+            "https://www.forbes.com/advisor/business/what-is-waterfall-methodology/",
+            "https://www.geeksforgeeks.org/waterfall-model/"
+          ], 
+          "internal": [] },
+        { 
+          "topic": "Agile", 
+          "external": [
+            "https://www.geeksforgeeks.org/software-engineering-agile-software-development/",
+            "https://www.geeksforgeeks.org/what-is-agile-methodology/",
+            "https://www.geeksforgeeks.org/agile-software-process-and-its-principles/",
+            "https://www.pmi.org/disciplined-agile/agile/theagilemanifesto",
+            "https://learn.microsoft.com/en-us/devops/plan/what-is-agile",
+            "https://www.coursera.org/articles/what-is-agile-a-beginners-guide",
+            "https://developer.ibm.com/articles/5-steps-of-test-driven-development/",
+            "https://www.geeksforgeeks.org/difference-between-agile-and-sdlc/?ref=lbp#:~:text=milestones%20and%20processes.-,What%20is%20Agile%3F,-Agile%20is%20a"
+          ], 
+          "internal": [
+            {
+              "path":"resources/video_slides/week4-video-slides.pdf",
+              "page": "4-6"
+            }
+          ] },
+        { 
+          "topic": "Scrum", 
+          "external": [
+            "https://www.geeksforgeeks.org/scrum-software-development/",
+            "https://www.geeksforgeeks.org/software-engineering-agile-software-development/#:~:text=Agile%20Software%20Development-,Scrum,-%3A%20Scrum%20is"
+          ], 
+          "internal": [] },
+        { 
+          "topic": "CRC", 
+          "external": [
+            "https://www.geeksforgeeks.org/class-responsibility-collaboration-card/",
+            "https://en.wikipedia.org/wiki/Class-responsibility-collaboration_card",
+            "https://agilemodeling.com/artifacts/crcmodel.htm"
+          ], 
+          "internal": [
+            {
+              "path":"resources/video_slides/week4-video-slides.pdf",
+              "page": "2-3"
+            }
+          ] },
+        { 
+          "topic": "UML Diagrams", 
+          "external": [
+            "https://www.lucidchart.com/pages/landing/uml-diagram-software",
+            "https://www.geeksforgeeks.org/unified-modeling-language-uml-introduction/",
+            "https://www.youtube.com/watch?v=WnMQ8HlmeXc",
+            "https://www.youtube.com/watch?v=6XrL5jXmTwM",
+            "https://www.youtube.com/watch?v=pCK6prSq8aw",
+            "https://www.youtube.com/watch?v=4emxjxonNRI"
+          ], 
+          "internal": [
+            {
+              "path": "resources/video_slides/week5-video-slides.pdf",
+              "page": "5-10"
+            }
+          ] }
   ],
   "Week 5/6/7": [
     { 
