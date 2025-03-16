@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import CourseDropdown from "../components/CourseDropdown";
 import { useAutoScroll } from "../hooks/autoscroll";
 
@@ -9,18 +9,29 @@ interface Message {
   sender: "user" | "bot";
 }
 
-export default function Chatbot() {
+export default function Chatbot({ 
+  searchParams
+}: {
+  searchParams: Promise<{ course: string, query: string }>;
+}) {
+
+  const { course, query } = use(searchParams);
+
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [availableCourses, setAvailableCourses] = useState<string[]>([]);
   const [sidebarCourses, setSidebarCourses] = useState<string[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
+
+  const [fromLanding, setfromLanding] = useState(false);
+
   const [input, setInput] = useState("");
   const [courseError, setCourseError] = useState<string | null>(null);
 
   const { chatRef, scrollToBottom } = useAutoScroll();
-
+  
   // Remove error message after 5 seconds
   useEffect(() => {
+
     if (courseError) {
       const timer = setTimeout(() => {
         setCourseError(null);
@@ -37,25 +48,43 @@ export default function Chatbot() {
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
 
         const data: string[] = await res.json();
-        setAvailableCourses(data);
+        setAvailableCourses(data.filter((c) => c !== course));
       } catch (error) {
         console.error("Failed to fetch courses:", error);
       }
     }
     fetchCourses();
+    if (course && query) {
+      addCourse(course);
+      setInput(query);
+      setfromLanding(true);
+    }
   }, []);
 
-  const addCourse = (course: string) => {
-    setSidebarCourses((prev) => [...prev, course]);
-    setAvailableCourses((prev) => prev.filter((c) => c !== course));
-    setSelectedCourse(course);
-    setCourseError(null); // Clear course selection error
+  useEffect(() => {
+    async function sendLandingMessage() {
+      if (query && course) {
+        try {
+          await sendMessage();
+        } catch (error) {
+          console.error("failed to send message", error);
+        }
+      }
+    }
+    sendLandingMessage();
+  }, [fromLanding]);
+
+  const addCourse = (courseToAdd: string) => {
+    setSidebarCourses((prev) => [...prev, courseToAdd]);
+    setAvailableCourses((prev) => prev.filter((c) => c !== courseToAdd));
+    setSelectedCourse(courseToAdd);
+    setCourseError(null); // Clear courseToAdd selection error
 
     setMessages((prev) => ({
       ...prev,
-      [course]: [
+      [courseToAdd]: [
         {
-          text: `Hi, I’m TutorBot, your personal AI tutor for ${course}. How can I help you?`,
+          text: `Hi, I’m TutorBot, your personal AI tutor for ${courseToAdd}. How can I help you?`,
           sender: "bot",
         },
       ],
@@ -117,20 +146,20 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-white">
       <div className="flex flex-1 overflow-hidden">
         
         {/* Sidebar */}
         <aside className="w-1/4 border-r p-4 bg-white">
           <h1 className="relative text-5xl uppercase w-fit mx-auto">
             <span className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-6 w-full bg-[#E9F3DA]"></span>
-            <span className="relative font-mono">CHATBOT</span>
+            <span className="relative">CHATBOT</span>
           </h1>
           <div className="flex flex-col space-y-2 mt-6">
             {sidebarCourses.map((course) => (
               <button
                 key={course}
-                className={`p-3 rounded-md text-center font-mono text-2xl ${
+                className={`p-3 rounded-md text-center text-2xl ${
                   selectedCourse === course ? "font-semibold" : ""
                 }`}
                 style={selectedCourse === course ? { backgroundColor: "#FFF0D2" } : { backgroundColor: "#FAFAEB" }}
@@ -151,7 +180,7 @@ export default function Chatbot() {
           <div ref={chatRef} className="flex-1 p-4 overflow-y-auto min-h-0">
             {(messages[selectedCourse!] || []).map((msg, index) => (
               <div key={index} className={`mb-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`p-3 font-mono rounded-lg max-w-xs ${msg.sender === "user" ? "bg-yellow-100" : "bg-[#E9F3DA]"}`}>
+                <div className={`p-3 rounded-lg max-w-xs ${msg.sender === "user" ? "bg-yellow-100" : "bg-[#E9F3DA]"}`}>
                   {msg.text}
                 </div>
               </div>
@@ -180,7 +209,7 @@ export default function Chatbot() {
               
               {/* Send Button (Inside Input) */}
               <button
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
+                className="text-3xl absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
                 onClick={sendMessage}
               > 
                 ➤
