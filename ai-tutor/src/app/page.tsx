@@ -13,11 +13,35 @@ export default function Home() {
 'use client'
 
 import { useRouter } from 'next/navigation';
+import LandingDropdown from "./components/LandingDropdown";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const router = useRouter();
 
+<<<<<<< HEAD
 >>>>>>> dcd573d (implemented landing page redirect to chatbot page)
+=======
+  const [courses, setCourses] = useState<string[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<string>("");
+
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        const res = await fetch("http://localhost:3000/api/courses");
+        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+
+        const data: string[] = await res.json();
+        setCourses(data);
+        setSelectedCourse(data[0]);
+      } catch (error) {
+        console.error("Failed to fetch courses:", error);
+      }
+    }
+    fetchCourses();
+  }, []);
+
+>>>>>>> 7f05b89 (Implemented course selection for query on landing page)
   return (
 <<<<<<< HEAD
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
@@ -31,18 +55,22 @@ export default function Home() {
         </div>
         <div className="text-md text-center m-2">A Personal AI Tutor.</div>
           {/* Input Box */}
-        <div className="relative flex flex-row w-[60vw] p-4 border-none rounded-full bg-[#FFF0D2]">
+        <div className="relative flex flex-row max-w-7xl w-[60vw] p-4 border-none rounded-full bg-[#FFF0D2]">
             {/* Input Field */}
+            <div className="relative inline-flex w-fit ml-4">
+              <LandingDropdown availableCourses={courses} currCourse={selectedCourse} selectCourse={setSelectedCourse} />
+            </div>
+            <div className= "relative flex items-center p-1 text-2xl text-gray-400">|</div>
             <input
-              className="bg-transparent w-full focus:outline-none"
+              className="relative flex items-center bg-transparent w-full focus:outline-none placeholder:text-gray-400"
               type="text"
-              placeholder="As me something..."
+              placeholder="Ask me something..."
               // value={input}
               // onChange={(e) => setInput(e.target.value)}
-              onKeyDown={ (e) => e.key === "Enter" && router.push(`/chatbot?course=CSC207&query=${(e.target as HTMLTextAreaElement).value}`) }
+              onKeyDown={ (e) => e.key === "Enter" && router.push(`/chatbot?course=${selectedCourse}&query=${(e.target as HTMLTextAreaElement).value}`) }
             />
             {/* Send Button (Inside Input) */}
-            <button className="text-3xl ml-3 text-gray-500">➤</button>
+            <button className="text-3xl ml-3 text-gray-400">➤</button>
         </div>
 >>>>>>> 4d8430d (added basic middleware for passing path, basic landing page implemented)
     </div>
