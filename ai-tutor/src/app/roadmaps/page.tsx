@@ -815,7 +815,7 @@ const TopicDetailInfo = ({ topicId, onClose }) => {
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: colors.text }}
+                  style={{ color: "blue" }}
                 >
                   {`${title} Link ${domainCounts[domain]}`}
                 </a>
