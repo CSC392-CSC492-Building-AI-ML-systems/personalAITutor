@@ -17,6 +17,7 @@ interface Course {
   has_roadmap: boolean;
   name: string;
 }
+
 export default function Chatbot({ 
   searchParams
 }: {
@@ -51,26 +52,30 @@ export default function Chatbot({
     }
   }, [courseError]);
 
-  
+  // Function to fetch courses
+  const fetchCourses = async () => {
+    try {
+      const allCoursesResponse = await getAllCourses();
+      const userCoursesResponse = await getUserCourses();
+      const userCourses = userCoursesResponse.courses.map((course: Course) => course.name);
+      const coursesWithChatbot = allCoursesResponse.courses
+        .filter((course: Course) => course.has_chatbot && userCourses.includes(course.name))
+        .map((course: Course) => course.name);
+      setAvailableCourses(coursesWithChatbot);
+    } catch (error) {
+      console.error("Failed to fetch courses:", error);
+    }
+  };
+
   // Fetch courses for sidebar
-   useEffect(() => {
-      async function fetchCourses() {
-        try {
-          const data = await getAllCourses();
-          const coursesWithChatbot = data.courses.filter((course: Course) => course.has_chatbot).map((course: Course) => course.name);
-          setAvailableCourses(coursesWithChatbot);
-        } catch (error) {
-          console.error("Failed to fetch courses:", error);
-        }
-      }
-      fetchCourses();
+  useEffect(() => {
+    fetchCourses();
     if (course && query) {
       addCourse(course);
       setInput(query);
       setfromLanding(true);
     }
   }, []);
-
 
   // send landing message
   useEffect(() => {
@@ -85,7 +90,6 @@ export default function Chatbot({
     }
     sendLandingMessage();
   }, [fromLanding]);
-
 
   // courses added to sidebar
   const addCourse = (courseToAdd: string) => {
@@ -106,7 +110,6 @@ export default function Chatbot({
   };
 
   // send text
-
   const sendMessage = async () => {
     if (!input.trim()) return;
   
@@ -173,6 +176,7 @@ export default function Chatbot({
                 onClick={() => {
                   setSelectedCourse(course);
                   setCourseError(null);
+                  fetchCourses(); // Fetch courses when clicking sidebar button
                 }}
               >
                 {course}
