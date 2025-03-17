@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from "next/image";
 import "./globals.css";
+import ProfileIcon from './components/profileIcon';
 
 export default function RootLayout({
   children,
@@ -12,16 +13,24 @@ export default function RootLayout({
 }>) {
 
   const pathname = usePathname();
+  const user = {
+    name: "",
+    email: "",
+    password: "",
+    isLoggedIn: false,
+  };
 
   return (
     <html lang="en">
       <body className="font-mono overflow-hidden h-screen antialiased flex flex-col">
         {/* Header */}
-        <div className="border-b flex flex-none flex-row h-1/10 items-center">
+      <div className="border-b flex flex-none flex-row h-1/10 items-center justify-between px-6">
+        {/* Left Section - Logo and Navigation */}
+        <div className="flex items-center">
           <Link href="/">
             <Image className="m-3" src="logo.svg" alt="advisory logo" width={80} height={80}></Image>
           </Link>
-          <Link href="/roadmaps" className='relative ml-5'>
+          <Link href="/roadmaps" className="relative ml-5">
             <div className={pathname === '/roadmaps' ? 'absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 -mx-2 bg-[#FFF0D2]' : ''}></div>
             <div className="relative text-lg">ROADMAPS</div>
           </Link>
@@ -30,9 +39,14 @@ export default function RootLayout({
             <div className="relative text-lg">CHATBOT</div>
           </Link>
         </div>
+
+        {/* Right Section - Profile Icon */}
+        <ProfileIcon user={user} />
+      </div>
         {/* Main content */}
         <main className="flex-1 overflow-auto">
           {children}
+  
         </main>
 
         {/* Footer */}
