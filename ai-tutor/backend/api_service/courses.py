@@ -9,7 +9,7 @@ courses = Blueprint('courses', __name__)
 
 @courses.route('/get-flowchart/<course_code>', methods=['GET'])
 def get_flowchart(course_code):
-    file_path = f'assets/{course_code}_flowchart.txt'
+    file_path = os.getenv(f'{course_code.upper()}_FLOWCHART')
     try:
         with open(file_path, 'r') as file:
             content = file.read()
