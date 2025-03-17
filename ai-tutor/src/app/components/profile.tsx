@@ -118,11 +118,11 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
         {user.isLoggedIn ? (
           // Logged-in User View
           <div className="space-y-4">
-            <p>Welcome, !</p>
+            <p>Welcome,{user.username}!</p>
             <p>Email: {user.email}</p>
 
             {/* Logout Button */}
-            <Button className="w-full bg-red-500 text-white" onClick={handleLogout}>
+            <Button className="w-full bg-[#FFE0A0] text-black hover:bg-orange-400" onClick={handleLogout}>
               Logout
             </Button>
 

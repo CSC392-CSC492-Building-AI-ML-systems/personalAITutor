@@ -3,12 +3,20 @@
 import { useState, useEffect, use } from "react";
 import CourseDropdown from "../components/CourseDropdown";
 import { useAutoScroll } from "../hooks/autoscroll";
+import { askQuestion } from "../../utils/questionUtils";
+import { getAllCourses, getUserCourses } from '../../utils/courseUtils';
 
 interface Message {
   text: string;
   sender: "user" | "bot";
 }
 
+interface Course {
+  description: string;
+  has_chatbot: boolean;
+  has_roadmap: boolean;
+  name: string;
+}
 export default function Chatbot({ 
   searchParams
 }: {
@@ -17,21 +25,23 @@ export default function Chatbot({
 
   const { course, query } = use(searchParams);
 
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
-  const [availableCourses, setAvailableCourses] = useState<string[]>([]);
-  const [sidebarCourses, setSidebarCourses] = useState<string[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null); // currently selected course
+  const [availableCourses, setAvailableCourses] = useState<string[]>([]); // courses that have chatbot
+  const [sidebarCourses, setSidebarCourses] = useState<string[]>([]); // courses that user add to the sidebar
+ 
+  //message
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
 
   const [fromLanding, setfromLanding] = useState(false);
-
+  
+  //input
   const [input, setInput] = useState("");
   const [courseError, setCourseError] = useState<string | null>(null);
-
+  //autoscroll
   const { chatRef, scrollToBottom } = useAutoScroll();
   
-  // Remove error message after 5 seconds
+  // Error message after 5 seconds
   useEffect(() => {
-
     if (courseError) {
       const timer = setTimeout(() => {
         setCourseError(null);
@@ -41,19 +51,19 @@ export default function Chatbot({
     }
   }, [courseError]);
 
-  useEffect(() => {
-    async function fetchCourses() {
-      try {
-        const res = await fetch("http://localhost:3000/api/courses");
-        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-
-        const data: string[] = await res.json();
-        setAvailableCourses(data.filter((c) => c !== course));
-      } catch (error) {
-        console.error("Failed to fetch courses:", error);
+  
+  // Fetch courses for sidebar
+   useEffect(() => {
+      async function fetchCourses() {
+        try {
+          const data = await getAllCourses();
+          const coursesWithChatbot = data.courses.filter((course: Course) => course.has_chatbot).map((course: Course) => course.name);
+          setAvailableCourses(coursesWithChatbot);
+        } catch (error) {
+          console.error("Failed to fetch courses:", error);
+        }
       }
-    }
-    fetchCourses();
+      fetchCourses();
     if (course && query) {
       addCourse(course);
       setInput(query);
@@ -61,6 +71,8 @@ export default function Chatbot({
     }
   }, []);
 
+
+  // send landing message
   useEffect(() => {
     async function sendLandingMessage() {
       if (query && course) {
@@ -74,6 +86,8 @@ export default function Chatbot({
     sendLandingMessage();
   }, [fromLanding]);
 
+
+  // courses added to sidebar
   const addCourse = (courseToAdd: string) => {
     setSidebarCourses((prev) => [...prev, courseToAdd]);
     setAvailableCourses((prev) => prev.filter((c) => c !== courseToAdd));
@@ -91,53 +105,46 @@ export default function Chatbot({
     }));
   };
 
+  // send text
+
   const sendMessage = async () => {
     if (!input.trim()) return;
-
+  
     if (!selectedCourse) {
       setCourseError("Please add a chatbot for a course before sending a message.");
       return;
     }
-
+  
+    // Add user's message to the chat
     setMessages((prev) => ({
       ...prev,
       [selectedCourse]: [...(prev[selectedCourse] || []), { text: input, sender: "user" }],
     }));
-
+  
     scrollToBottom();
-
+  
+    // Placeholder message while waiting for response
     setMessages((prev) => ({
       ...prev,
       [selectedCourse]: [...prev[selectedCourse], { text: "...", sender: "bot" }],
     }));
-
+  
     setInput("");
-
+  
     try {
-      const response = await fetch(`/api/chat?course=${selectedCourse}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
-      });
-
-      const reader = response.body?.getReader();
-      if (!reader) return;
-
-      const decoder = new TextDecoder();
-      let aiMessage = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        aiMessage += decoder.decode(value, { stream: true });
-
+      // Call askQuestion instead of making direct fetch request
+      const response = await askQuestion(selectedCourse, input);
+  
+      if (response && response.answer) {
         setMessages((prev) => ({
           ...prev,
-          [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: aiMessage, sender: "bot" }],
+          [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: response.answer, sender: "bot" }],
         }));
+      } else {
+        throw new Error("Invalid response format");
       }
     } catch (error) {
-      console.error("Error sending message", error);
+      console.error("Error asking question:", error);
       setMessages((prev) => ({
         ...prev,
         [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: "Error generating response. Please try again.", sender: "bot" }],
