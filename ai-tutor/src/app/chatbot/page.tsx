@@ -3,8 +3,8 @@
 import { useState, useEffect, use } from "react";
 import CourseDropdown from "../components/CourseDropdown";
 import { useAutoScroll } from "../hooks/autoscroll";
-import { askQuestion } from "../../utils/questionUtils";
-import { getAllCourses, getUserCourses } from '../../utils/courseUtils';
+import { askQuestion } from "@/utils/questionUtils";
+import { getAllCourses, getUserCourses } from '@/utils/courseUtils';
 
 interface Message {
   text: string;
