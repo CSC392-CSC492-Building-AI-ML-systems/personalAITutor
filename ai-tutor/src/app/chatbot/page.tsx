@@ -102,7 +102,7 @@ export default function Chatbot({
       ...prev,
       [courseToAdd]: [
         {
-          text: `Hi, I’m TutorBot, your personal AI tutor for ${courseToAdd}. How can I help you?`,
+          text: `Hi, I’m Advsry, your personal AI tutor for ${courseToAdd}. How can I help you?`,
           sender: "bot",
         },
       ],

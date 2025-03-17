@@ -63,7 +63,7 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
     const response = await login(email, password);
     if (response) {
       localStorage.setItem("authToken", response.access_token);
-      localStorage.setItem("userName", response.name);
+      localStorage.setItem("userName", response.username);
       localStorage.setItem("userEmail", response.user.email);
       setUser({ username: response.user.username, email: response.user.email, isLoggedIn: true });
       await fetchAndSetCourses();
@@ -109,7 +109,7 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
       fetchAndSetCourses();
     }
   }, [user.isLoggedIn]);
-
+  console.log(user.username, user.email);
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="p-6 rounded-lg bg-[#E9F3DA] max-w-3xl w-full">
@@ -118,7 +118,7 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
         {user.isLoggedIn ? (
           // Logged-in User View
           <div className="space-y-4">
-            <p>Welcome,{user.username}!</p>
+            <p>Welcome, {user.username}!</p>
             <p>Email: {user.email}</p>
 
             {/* Logout Button */}
