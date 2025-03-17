@@ -5,7 +5,7 @@ import { Card, CardContent } from "./ui/card";
 import Profile from "./profile"; 
 
 type User = {
-  username?: string;
+  name?: string;
   email?: string;
   isLoggedIn: boolean;
 };
@@ -29,7 +29,7 @@ export default function ProfileIcon({ user, setUser }: { user: User; setUser: an
       >
         <CardContent className="flex items-center justify-center w-full h-full p-0">
           <span className="text-lg font-bold text-black flex items-center justify-center w-full h-full">
-            {getInitials(user?.username)}
+            {getInitials(user?.name)}
           </span>
         </CardContent>
       </Card>

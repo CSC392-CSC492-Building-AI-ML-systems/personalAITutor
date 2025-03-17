@@ -176,7 +176,6 @@ export default function Chatbot({
                 onClick={() => {
                   setSelectedCourse(course);
                   setCourseError(null);
-                  fetchCourses(); // Fetch courses when clicking sidebar button
                 }}
               >
                 {course}

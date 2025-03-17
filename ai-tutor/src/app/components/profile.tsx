@@ -7,7 +7,7 @@ import {enrollCourse, dropCourse, getAllCourses, getUserCourses } from '../../ut
 import Course from "./course";
 
 type User = {
-  username?: string;
+  name?: string;
   email?: string;
   password?: string;
   isLoggedIn: boolean;
@@ -19,7 +19,7 @@ type CourseType = {
 
 export default function Profile({ user, setUser, onClose }: { user: User; setUser: any; onClose: () => void }) {
   const [isSigningUp, setIsSigningUp] = useState(false);
-  const [username, setName] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -47,12 +47,12 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
 
   //  Handle Register
   const handleRegister = async () => {
-    const response = await register(username, email, password);
+    const response = await register(name, email, password);
     if (response) {
       // localStorage.setItem("authToken", response.access_token);
-      localStorage.setItem("userName", username);
+      localStorage.setItem("userName", name);
       localStorage.setItem("userEmail", email);
-      setUser({ username, email, isLoggedIn: true });
+      setUser({ name, email, isLoggedIn: true });
       await handleLogin();
       onClose();
     }
@@ -63,9 +63,9 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
     const response = await login(email, password);
     if (response) {
       localStorage.setItem("authToken", response.access_token);
-      localStorage.setItem("userName", response.username);
+      localStorage.setItem("userName", response.user.username);
       localStorage.setItem("userEmail", response.user.email);
-      setUser({ username: response.user.username, email: response.user.email, isLoggedIn: true });
+      setUser({ name: response.user.username, email: response.user.email, isLoggedIn: true });
       await fetchAndSetCourses();
       onClose();
     }
@@ -77,7 +77,7 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
     localStorage.removeItem("authToken");
     localStorage.removeItem("userName");
     localStorage.removeItem("userEmail");
-    setUser({ username: "", email: "", isLoggedIn: false });
+    setUser({ name: "", email: "", isLoggedIn: false });
   };
 
   // Handle Course Enrollment
@@ -109,7 +109,7 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
       fetchAndSetCourses();
     }
   }, [user.isLoggedIn]);
-  console.log(user.username, user.email);
+  console.log(user.name, user.email);
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="p-6 rounded-lg bg-[#E9F3DA] max-w-3xl w-full">
@@ -118,7 +118,7 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
         {user.isLoggedIn ? (
           // Logged-in User View
           <div className="space-y-4">
-            <p>Welcome, {user.username}!</p>
+            <p>Welcome, {user.name}!</p>
             <p>Email: {user.email}</p>
 
             {/* Logout Button */}
@@ -137,7 +137,7 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
         ) : (
           //  Login/Register Form
           <div className="space-y-4">
-            {isSigningUp && <Input type="text" placeholder="Username" value={username} onChange={(e) => setName(e.target.value)} />}
+            {isSigningUp && <Input type="text" placeholder="Username" value={name} onChange={(e) => setName(e.target.value)} />}
             <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
             <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
 
