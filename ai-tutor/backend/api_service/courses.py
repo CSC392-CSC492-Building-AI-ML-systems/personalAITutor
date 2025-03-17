@@ -48,7 +48,8 @@ def drop_course(course_code):
         Question.query.filter_by(user_id=user_id, course_name=course_code).delete()
 
         # Delete the user's enrollment in the course
-        user_courses.query.filter_by(user_id=user_id, course_name=course_code).delete()
+        delete_enrollment = user_courses.delete().where(user_courses.c.user_id == user_id, user_courses.c.course_name == course_code)
+        db.session.execute(delete_enrollment)
 
         db.session.commit()
         return jsonify({"message": "Course dropped and all associated questions deleted successfully"}), 200
