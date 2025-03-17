@@ -27,7 +27,9 @@ export default function Chatbot({
   const { course, query } = use(searchParams);
 
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null); // currently selected course
-  const [availableCourses, setAvailableCourses] = useState<string[]>([]); // courses that have chatbot
+  const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]); // enrolled courses
+  const [chatbotCourses, setChatbotCourses] = useState<string[]>([]); // courses that have chatbot
+  const [allCourses, setAllCourses] = useState<string[]>([]); // all courses
   const [sidebarCourses, setSidebarCourses] = useState<string[]>([]); // courses that user add to the sidebar
  
   //message
@@ -57,11 +59,14 @@ export default function Chatbot({
     try {
       const allCoursesResponse = await getAllCourses();
       const userCoursesResponse = await getUserCourses();
-      const userCourses = userCoursesResponse.courses.map((course: Course) => course.name);
+      const allCourses = allCoursesResponse.courses.map((course: Course) => course.name);
+      const enrolledCourses = userCoursesResponse.courses.map((course: Course) => course.name);
       const coursesWithChatbot = allCoursesResponse.courses
-        .filter((course: Course) => course.has_chatbot && userCourses.includes(course.name))
+        .filter((course: Course) => course.has_chatbot)
         .map((course: Course) => course.name);
-      setAvailableCourses(coursesWithChatbot);
+      setAllCourses(allCourses);
+      setChatbotCourses(coursesWithChatbot);
+      setEnrolledCourses(enrolledCourses);
     } catch (error) {
       console.error("Failed to fetch courses:", error);
     }
@@ -94,7 +99,7 @@ export default function Chatbot({
   // courses added to sidebar
   const addCourse = (courseToAdd: string) => {
     setSidebarCourses((prev) => [...prev, courseToAdd]);
-    setAvailableCourses((prev) => prev.filter((c) => c !== courseToAdd));
+    setAllCourses((prev) => prev.filter((c) => c !== courseToAdd));
     setSelectedCourse(courseToAdd);
     setCourseError(null); // Clear courseToAdd selection error
 
@@ -102,7 +107,7 @@ export default function Chatbot({
       ...prev,
       [courseToAdd]: [
         {
-          text: `Hi, I’m Advsry, your personal AI tutor for ${courseToAdd}. How can I help you?`,
+          text: `Hi, I’m Advisory, your personal AI tutor for ${courseToAdd}. How can I help you?`,
           sender: "bot",
         },
       ],
@@ -117,7 +122,7 @@ export default function Chatbot({
       setCourseError("Please add a chatbot for a course before sending a message.");
       return;
     }
-  
+
     // Add user's message to the chat
     setMessages((prev) => ({
       ...prev,
@@ -135,6 +140,24 @@ export default function Chatbot({
     setInput("");
   
     try {
+      // Check if the user is enrolled in the selected course
+      if (!enrolledCourses.includes(selectedCourse)) {
+        setMessages((prev) => ({
+          ...prev,
+          [selectedCourse]: [...(prev[selectedCourse].slice(0, -1) || []), { text: "Not enrolled in this course!", sender: "bot" }],
+        }));
+        return;
+      }
+
+      // Check if the course has chatbot
+      if (!chatbotCourses.includes(selectedCourse)) {
+        setMessages((prev) => ({
+          ...prev,
+          [selectedCourse]: [...(prev[selectedCourse].slice(0, -1) || []), { text: "This course does not have a chatbot yet!", sender: "bot" }],
+        }));
+        return;
+      }
+
       // Call askQuestion instead of making direct fetch request
       const response = await askQuestion(selectedCourse, input);
   
@@ -181,7 +204,7 @@ export default function Chatbot({
                 {course}
               </button>
             ))}
-            <CourseDropdown availableCourses={availableCourses} addCourse={addCourse} />
+            <CourseDropdown availableCourses={allCourses} sidebarCourses={sidebarCourses} addCourse={addCourse} />
           </div>
         </aside>
   

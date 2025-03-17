@@ -2,10 +2,13 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 interface CourseDropdownProps {
   availableCourses: string[];
+  sidebarCourses: string[];
   addCourse: (course: string) => void;
 }
 
-export default function CourseDropdown({ availableCourses, addCourse }: CourseDropdownProps) {
+export default function CourseDropdown({ availableCourses, sidebarCourses, addCourse }: CourseDropdownProps) {
+  const filteredCourses = availableCourses.filter(course => !sidebarCourses.includes(course));
+
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
@@ -20,8 +23,8 @@ export default function CourseDropdown({ availableCourses, addCourse }: CourseDr
           align="center" // Centers the dropdown under the button
           sideOffset={5} // Adjusts vertical positioning
         >
-          {availableCourses.length > 0 ? (
-            availableCourses.map((course) => (
+          {filteredCourses.length > 0 ? (
+            filteredCourses.map((course) => (
               <DropdownMenu.Item
                 key={course}
                 className="p-2 w-full text-center font-mono text-lg hover:bg-gray-200 cursor-pointer rounded-md"

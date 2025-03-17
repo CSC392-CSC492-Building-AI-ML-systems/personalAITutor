@@ -109,7 +109,7 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
       fetchAndSetCourses();
     }
   }, [user.isLoggedIn]);
-  console.log(user.name, user.email);
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="p-6 rounded-lg bg-[#E9F3DA] max-w-3xl w-full">
