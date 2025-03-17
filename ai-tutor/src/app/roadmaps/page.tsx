@@ -1,4 +1,5 @@
-'use client'
+
+"use client";
 
 import { useState, useEffect } from "react";
 import { getAllCourses } from "../../utils/courseUtils";
@@ -34,12 +35,18 @@ export default function Roadmaps() {
         <div className="relative text-7xl">ROADMAPS</div>
       </div>
       <div className="w-fit max-w-5xl grid h-100 grid-cols-4 gap-4 pt-10">
-        {courses.map( (c) => {
+
+        {courses.map((c) => {
           return (
-            <div key={c} className="w-[200px] h-[100px] shadow-sm place-content-center text-center rounded-lg bg-[#FFF0D2]">{c}</div>
+            <div
+              key={c}
+              className="w-[200px] h-[100px] shadow-sm place-content-center text-center rounded-lg bg-[#FFF0D2]"
+            >
+              {c}
+            </div>
           );
-        })
-        }
+        })}
+        
       </div>
     </div>
   );
