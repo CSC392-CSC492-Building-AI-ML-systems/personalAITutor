@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { register, login, logout } from "../../utils/authUtils"; 
-import {enrollCourse, dropCourse, getAllCourses, getUserCourses } from '../../utils/courseUtils';
+import { register, login, logout } from "@/utils/authUtils"; 
+import {enrollCourse, dropCourse, getAllCourses, getUserCourses } from '@/utils/courseUtils';
 import Course from "./course";
 
 type User = {

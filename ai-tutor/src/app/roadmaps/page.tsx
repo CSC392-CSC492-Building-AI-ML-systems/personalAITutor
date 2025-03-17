@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getAllCourses } from "../../utils/courseUtils";
+import { getAllCourses } from "@/utils/courseUtils";
 
 interface Course {
   description: string;

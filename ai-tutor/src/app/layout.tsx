@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import "./globals.css";
 import ProfileIcon from "./components/profileIcon";
-import { logout } from "../utils/authUtils"; 
+import { logout } from "@/utils/authUtils"; 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
