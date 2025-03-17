@@ -38,7 +38,6 @@ export async function login(email: string, password: string) {
 }
 
 export async function logout() {
-  console.log(localStorage.getItem("authToken"));
   try {
     const response = await fetch("http://localhost:7000/auth/logout", {
       method: "POST",
