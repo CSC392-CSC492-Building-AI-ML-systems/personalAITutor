@@ -20,7 +20,7 @@ def register():
         new_user = User(username=data['username'], email=data['email'], password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({"message": "User registered successfully"},user={"username": new_user.username, "email": new_user.email}), 201
+        return jsonify({"message": "User registered successfully", "user": {"username": new_user.username, "email": new_user.email}}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500

@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { register, login, logout } from "../../utils/authUtils"; 
+import {enrollCourse,getAllCourses, getUserCourses } from '../../utils/courseUtils';
 import Course from "./course";
 
 type User = {
@@ -13,16 +14,8 @@ type User = {
 };
 
 type CourseType = {
-  id: number;
   name: string;
 };
-
-//  Dummy Course Data (Replace with API Call Later)
-const allCourses: CourseType[] = [
-  { id: 1, name: "CSC207" },
-  { id: 2, name: "CSC311" },
-  { id: 3, name: "CSC209" },
-];
 
 export default function Profile({ user, setUser, onClose }: { user: User; setUser: any; onClose: () => void }) {
   const [isSigningUp, setIsSigningUp] = useState(false);
@@ -32,29 +25,50 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
 
   //  Track courses state
   const [enrolledCourses, setEnrolledCourses] = useState<CourseType[]>([]);
-  const [availableCourses, setAvailableCourses] = useState<CourseType[]>(allCourses);
+  const [availableCourses, setAvailableCourses] = useState<CourseType[]>([]);
+    // Function to fetch and set courses
+
+    const fetchAndSetCourses = async () => {
+      try {
+        const allCoursesResponse = await getAllCourses();
+        const userCoursesResponse = await getUserCourses();
+        if (allCoursesResponse && userCoursesResponse) {
+          const enrolledCourses = userCoursesResponse.courses;
+          const availableCourses = allCoursesResponse.courses.filter((course: CourseType) => 
+            !enrolledCourses.some((enrolledCourse: CourseType) => enrolledCourse.name === course.name)
+          );
+          setEnrolledCourses(enrolledCourses);
+          setAvailableCourses(availableCourses);
+        }
+      } catch (error) {
+        console.error("Failed to fetch courses:", error);
+      }
+    };
 
   //  Handle Register
   const handleRegister = async () => {
     const response = await register(username, email, password);
     if (response) {
-      localStorage.setItem("authToken", response.token);
+      // localStorage.setItem("authToken", response.access_token);
       localStorage.setItem("userName", username);
       localStorage.setItem("userEmail", email);
-      setUser({ name, email, isLoggedIn: true });
+      setUser({ username, email, isLoggedIn: true });
       onClose();
+      await handleLogin();
     }
   };
 
   //  Handle Login
   const handleLogin = async () => {
     const response = await login(email, password);
+    console.log(response)
     if (response) {
-      localStorage.setItem("authToken", response.token);
+      localStorage.setItem("authToken", response.access_token);
       localStorage.setItem("userName", response.name);
       localStorage.setItem("userEmail", response.user.email);
-      setUser({ name: response.user.name, email: response.user.email, isLoggedIn: true });
+      setUser({ username: response.user.username, email: response.user.email, isLoggedIn: true });
       onClose();
+      await fetchAndSetCourses();
     }
   };
 
@@ -64,21 +78,27 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
     localStorage.removeItem("authToken");
     localStorage.removeItem("userName");
     localStorage.removeItem("userEmail");
-    setUser({ name: "", email: "", isLoggedIn: false });
+    setUser({ username: "", email: "", isLoggedIn: false });
     setEnrolledCourses([]); // Reset courses on logout
-    setAvailableCourses(allCourses); // Reset available courses
+    setAvailableCourses([]); // Reset available courses
   };
 
-  //  Handle Course Enrollment
-  const handleEnroll = (course: CourseType) => {
-    setEnrolledCourses([...enrolledCourses, course]);
-    setAvailableCourses(availableCourses.filter((c) => c.id !== course.id));
+  // Handle Course Enrollment
+  const handleEnroll = async (course: CourseType) => {
+    try {
+      const response = await enrollCourse(course.name);
+      if (response) {
+        await fetchAndSetCourses(); // Fetch and set courses after enrollment
+      }
+    } catch (error) {
+      console.error("Failed to enroll in course:", error);
+    }
   };
 
-  //  Handle Course Unenrollment
+  // Handle Course Unenrollment
   const handleUnenroll = (course: CourseType) => {
     setAvailableCourses([...availableCourses, course]);
-    setEnrolledCourses(enrolledCourses.filter((c) => c.id !== course.id));
+    setEnrolledCourses(enrolledCourses.filter((c) => c.name !== course.name));
   };
 
   return (

@@ -1,3 +1,5 @@
+
+
 export async function register(username: string, email: string, password: string) {
   try {
     const response = await fetch("http://localhost:7000/auth/register", {
@@ -5,7 +7,6 @@ export async function register(username: string, email: string, password: string
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({username, email, password }),
     });
-    console.log("Register Response:", response);
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
@@ -37,6 +38,7 @@ export async function login(email: string, password: string) {
 }
 
 export async function logout() {
+  console.log(localStorage.getItem("authToken"));
   try {
     const response = await fetch("http://localhost:7000/auth/logout", {
       method: "POST",
@@ -45,9 +47,8 @@ export async function logout() {
         "Authorization": `Bearer ${localStorage.getItem("authToken")}`,
       },
     });
-
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`HTTP errorrr! Status: ${response.status}`);
     }
   } catch (error) {
     console.error("Failed to logout:", error);

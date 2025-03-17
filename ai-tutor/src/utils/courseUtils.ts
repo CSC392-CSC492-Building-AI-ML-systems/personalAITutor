@@ -108,18 +108,18 @@ export async function getUserCourses() {
 
 export async function getAllCourses() {
   try {
-    const response = await fetch("http://localhost:7000/courses", {
+    const response = await fetch("http://localhost:7000/courses/", {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
       },
     });
-
+    
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
-
     const data = await response.json();
+    console.log(data);
     return data;
   } catch (error) {
     console.error("Failed to fetch all courses:", error);

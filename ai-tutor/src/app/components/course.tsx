@@ -5,7 +5,6 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 
 type Course = {
-  id: number;
   name: string;
 };
 
@@ -16,7 +15,7 @@ type CourseProps = {
   onUnenroll: (course: Course) => void;
 };
 
-export default function Course({ enrolledCourses, availableCourses, onEnroll, onUnenroll }: CourseProps) {
+export default function Course({ enrolledCourses, availableCourses, onEnroll, onUnenroll }: CourseProps) { 
   return (
     <div className="flex gap-8 p-4">
       {/* Enrolled Courses Section */}
@@ -25,7 +24,7 @@ export default function Course({ enrolledCourses, availableCourses, onEnroll, on
         {enrolledCourses.length > 0 ? (
           <ul className="space-y-2">
             {enrolledCourses.map((course) => (
-              <li key={course.id} className="flex justify-between items-center p-2 border rounded">
+              <li key={course.name} className="flex justify-between items-center p-2 border rounded">
                 <span>{course.name}</span>
                 <Button
                 className="bg-[#FFF0D2] text-black border hover:bg-[#FFE0A3]"
@@ -47,7 +46,7 @@ export default function Course({ enrolledCourses, availableCourses, onEnroll, on
         {availableCourses.length > 0 ? (
           <ul className="space-y-2">
             {availableCourses.map((course) => (
-              <li key={course.id} className="flex justify-between items-center p-2 border rounded">
+              <li key={course.name} className="flex justify-between items-center p-2 border rounded">
                 <span>{course.name}</span>
                 <Button
                 className="bg-[#FFF0D2] text-black border hover:bg-[#FFE0A3]"
