@@ -1,7 +1,7 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from 'next/link';
 import { getAllCourses } from "@/utils/courseUtils";
 
 interface Course {
@@ -38,12 +38,13 @@ export default function Roadmaps() {
 
         {courses.map((c) => {
           return (
-            <div
-              key={c}
-              className="w-[200px] h-[100px] shadow-sm place-content-center text-center rounded-lg bg-[#FFF0D2]"
-            >
-              {c}
-            </div>
+            <Link href={`/roadmaps/${c.toLowerCase()}`} key={c}>
+              <div
+                className="w-[200px] h-[100px] shadow-sm place-content-center text-center rounded-lg bg-[#FFF0D2] cursor-pointer"
+              >
+                {c}
+              </div>
+            </Link>
           );
         })}
         
