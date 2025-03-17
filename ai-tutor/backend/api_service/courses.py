@@ -8,7 +8,6 @@ import os
 courses = Blueprint('courses', __name__)
 
 @courses.route('/get-flowchart/<course_code>', methods=['GET'])
-@jwt_required()
 def get_flowchart(course_code):
     file_path = f'assets/{course_code}_flowchart.txt'
     try:
