@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { register, login, logout } from "../../utils/authUtils"; 
-import {enrollCourse,getAllCourses, getUserCourses } from '../../utils/courseUtils';
+import {enrollCourse, dropCourse, getAllCourses, getUserCourses } from '../../utils/courseUtils';
 import Course from "./course";
 
 type User = {
@@ -26,24 +26,24 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
   //  Track courses state
   const [enrolledCourses, setEnrolledCourses] = useState<CourseType[]>([]);
   const [availableCourses, setAvailableCourses] = useState<CourseType[]>([]);
-    // Function to fetch and set courses
-
-    const fetchAndSetCourses = async () => {
-      try {
-        const allCoursesResponse = await getAllCourses();
-        const userCoursesResponse = await getUserCourses();
-        if (allCoursesResponse && userCoursesResponse) {
-          const enrolledCourses = userCoursesResponse.courses;
-          const availableCourses = allCoursesResponse.courses.filter((course: CourseType) => 
-            !enrolledCourses.some((enrolledCourse: CourseType) => enrolledCourse.name === course.name)
-          );
-          setEnrolledCourses(enrolledCourses);
-          setAvailableCourses(availableCourses);
-        }
-      } catch (error) {
-        console.error("Failed to fetch courses:", error);
+  
+  // Function to fetch and set courses
+  const fetchAndSetCourses = async () => {
+    try {
+      const allCoursesResponse = await getAllCourses();
+      const userCoursesResponse = await getUserCourses();
+      if (allCoursesResponse && userCoursesResponse) {
+        const enrolledCourses = userCoursesResponse.courses;
+        const availableCourses = allCoursesResponse.courses.filter((course: CourseType) => 
+          !enrolledCourses.some((enrolledCourse: CourseType) => enrolledCourse.name === course.name)
+        );
+        setEnrolledCourses(enrolledCourses);
+        setAvailableCourses(availableCourses);
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch courses:", error);
+    }
+  };
 
   //  Handle Register
   const handleRegister = async () => {
@@ -53,22 +53,21 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
       localStorage.setItem("userName", username);
       localStorage.setItem("userEmail", email);
       setUser({ username, email, isLoggedIn: true });
-      onClose();
       await handleLogin();
+      onClose();
     }
   };
 
   //  Handle Login
   const handleLogin = async () => {
     const response = await login(email, password);
-    console.log(response)
     if (response) {
       localStorage.setItem("authToken", response.access_token);
       localStorage.setItem("userName", response.name);
       localStorage.setItem("userEmail", response.user.email);
       setUser({ username: response.user.username, email: response.user.email, isLoggedIn: true });
-      onClose();
       await fetchAndSetCourses();
+      onClose();
     }
   };
 
@@ -79,8 +78,6 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
     localStorage.removeItem("userName");
     localStorage.removeItem("userEmail");
     setUser({ username: "", email: "", isLoggedIn: false });
-    setEnrolledCourses([]); // Reset courses on logout
-    setAvailableCourses([]); // Reset available courses
   };
 
   // Handle Course Enrollment
@@ -96,10 +93,22 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
   };
 
   // Handle Course Unenrollment
-  const handleUnenroll = (course: CourseType) => {
-    setAvailableCourses([...availableCourses, course]);
-    setEnrolledCourses(enrolledCourses.filter((c) => c.name !== course.name));
+  const handleUnenroll = async (course: CourseType) => {
+    try {
+      const response = await dropCourse(course.name);
+      if (response) {
+        await fetchAndSetCourses(); // Fetch and set courses after enrollment
+      }
+    } catch (error) {
+      console.error("Failed to enroll in course:", error);
+    }
   };
+
+  useEffect(() => {
+    if (user.isLoggedIn) {
+      fetchAndSetCourses();
+    }
+  }, [user.isLoggedIn]);
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
