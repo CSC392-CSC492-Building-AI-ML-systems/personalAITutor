@@ -9,6 +9,7 @@ export default function Home() {
 
   const [courses, setCourses] = useState<string[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<string>("");
+  const [input, setInput] = useState<string>("");
 
   useEffect(() => {
     async function fetchCourses() {
@@ -25,6 +26,12 @@ export default function Home() {
     }
     fetchCourses();
   }, []);
+
+  const handleSend = () => {
+    if (selectedCourse && input.trim()) {
+      router.push(`/chatbot?course=${selectedCourse}&query=${input}`);
+    }
+  };
 
   return (
     <div className="grid flex flex-col pt-[20vh] place-content-center">
@@ -44,12 +51,12 @@ export default function Home() {
               className="relative flex bg-transparent w-full focus:outline-none placeholder:text-gray-400"
               type="text"
               placeholder="Ask me something..."
-              // value={input}
-              // onChange={(e) => setInput(e.target.value)}
-              onKeyDown={ (e) => e.key === "Enter" && router.push(`/chatbot?course=${selectedCourse}&query=${(e.target as HTMLTextAreaElement).value}`) }
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
             />
             {/* Send Button (Inside Input) */}
-            <button className="text-3xl ml-3 mr-3 text-gray-400">➤</button>
+            <button className="text-3xl ml-3 mr-3 text-gray-400" onClick={handleSend}>➤</button>
         </div>
     </div>
   );

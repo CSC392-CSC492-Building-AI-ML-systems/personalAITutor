@@ -1,3 +1,5 @@
 .DS_Store
 env.txt
 docker-compose.yml
+__pycache__/
+*.pyc
