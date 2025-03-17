@@ -20,7 +20,7 @@ def register():
         new_user = User(username=data['username'], email=data['email'], password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({"message": "User registered successfully"}), 201
+        return jsonify({"message": "User registered successfully"},user={"username": new_user.username, "email": new_user.email}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
@@ -32,7 +32,7 @@ def login():
         user = User.query.filter_by(email=data['email']).first()
         if user and bcrypt.check_password_hash(user.password, data['password']):
             access_token = create_access_token(identity=user.username)
-            return jsonify(access_token=access_token), 200
+            return jsonify(access_token=access_token, user={"username": user.username, "email": user.email}), 200
         return jsonify({"message": "Invalid credentials"}), 401
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -1,11 +1,11 @@
-export async function register(name: string, email: string, password: string) {
+export async function register(username: string, email: string, password: string) {
   try {
     const response = await fetch("http://localhost:7000/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({username, email, password }),
     });
-
+    console.log("Register Response:", response);
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
@@ -30,7 +30,6 @@ export async function login(email: string, password: string) {
     }
 
     const data = await response.json();
-    localStorage.setItem("authToken", data.token); // Store the token
     return data;
   } catch (error) {
     console.error("Failed to login:", error);
@@ -50,8 +49,6 @@ export async function logout() {
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
-
-    localStorage.removeItem("authToken"); // Unset the token
   } catch (error) {
     console.error("Failed to logout:", error);
   }

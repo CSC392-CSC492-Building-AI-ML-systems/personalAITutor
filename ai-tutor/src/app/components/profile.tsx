@@ -1,11 +1,12 @@
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { useState } from "react";
-import Course from "./course"; // Import Course component
+import { register, login, logout } from "../../utils/authUtils"; 
+import Course from "./course";
 
 type User = {
-  name?: string;
+  username?: string;
   email?: string;
   password?: string;
   isLoggedIn: boolean;
@@ -16,28 +17,65 @@ type CourseType = {
   name: string;
 };
 
-// Dummy Course Data
+//  Dummy Course Data (Replace with API Call Later)
 const allCourses: CourseType[] = [
   { id: 1, name: "CSC207" },
   { id: 2, name: "CSC311" },
   { id: 3, name: "CSC209" },
 ];
 
-export default function Profile({ user, onClose }: { user: User; onClose: () => void }) {
-  const [showCourses, setShowCourses] = useState(false);
-  const [isSigningUp, setIsSigningUp] = useState(false); // Track if signing up
+export default function Profile({ user, setUser, onClose }: { user: User; setUser: any; onClose: () => void }) {
+  const [isSigningUp, setIsSigningUp] = useState(false);
+  const [username, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  // State for enrolled & available courses
+  //  Track courses state
   const [enrolledCourses, setEnrolledCourses] = useState<CourseType[]>([]);
   const [availableCourses, setAvailableCourses] = useState<CourseType[]>(allCourses);
 
-  // Enroll in a course
+  //  Handle Register
+  const handleRegister = async () => {
+    const response = await register(username, email, password);
+    if (response) {
+      localStorage.setItem("authToken", response.token);
+      localStorage.setItem("userName", username);
+      localStorage.setItem("userEmail", email);
+      setUser({ name, email, isLoggedIn: true });
+      onClose();
+    }
+  };
+
+  //  Handle Login
+  const handleLogin = async () => {
+    const response = await login(email, password);
+    if (response) {
+      localStorage.setItem("authToken", response.token);
+      localStorage.setItem("userName", response.name);
+      localStorage.setItem("userEmail", response.user.email);
+      setUser({ name: response.user.name, email: response.user.email, isLoggedIn: true });
+      onClose();
+    }
+  };
+
+  // Handle Logout
+  const handleLogout = async () => {
+    await logout();
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userEmail");
+    setUser({ name: "", email: "", isLoggedIn: false });
+    setEnrolledCourses([]); // Reset courses on logout
+    setAvailableCourses(allCourses); // Reset available courses
+  };
+
+  //  Handle Course Enrollment
   const handleEnroll = (course: CourseType) => {
     setEnrolledCourses([...enrolledCourses, course]);
     setAvailableCourses(availableCourses.filter((c) => c.id !== course.id));
   };
 
-  // Unenroll from a course
+  //  Handle Course Unenrollment
   const handleUnenroll = (course: CourseType) => {
     setAvailableCourses([...availableCourses, course]);
     setEnrolledCourses(enrolledCourses.filter((c) => c.id !== course.id));
@@ -51,63 +89,41 @@ export default function Profile({ user, onClose }: { user: User; onClose: () => 
         {user.isLoggedIn ? (
           // Logged-in User View
           <div className="space-y-4">
-            <Input type="text" defaultValue={user.name} placeholder="User Name" />
-            <Input type="email" defaultValue={user.email} placeholder="Email" />
-            <Input type="password" defaultValue={user.password} placeholder="Password" />
+            <p>Welcome, !</p>
+            <p>Email: {user.email}</p>
 
-            {/* Courses Button */}
-            <Button
-              className="bg-[#FFF0D2] text-black border hover:bg-[#FFE0A3]"
-              onClick={() => setShowCourses(!showCourses)}
-            >
-              Courses
+            {/* Logout Button */}
+            <Button className="w-full bg-red-500 text-white" onClick={handleLogout}>
+              Logout
             </Button>
 
-            {/* Show Course Component when button is clicked */}
-            {showCourses && (
-              <Course
-                enrolledCourses={enrolledCourses}
-                availableCourses={availableCourses}
-                onEnroll={handleEnroll}
-                onUnenroll={handleUnenroll}
-              />
-            )}
+            {/* Courses Section */}
+            <Course 
+              enrolledCourses={enrolledCourses} 
+              availableCourses={availableCourses} 
+              onEnroll={handleEnroll} 
+              onUnenroll={handleUnenroll} 
+            />
           </div>
         ) : (
-          // Login or Sign Up View
+          //  Login/Register Form
           <div className="space-y-4">
+            {isSigningUp && <Input type="text" placeholder="Username" value={username} onChange={(e) => setName(e.target.value)} />}
+            <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+
             {isSigningUp ? (
-              <>
-                <Input type="text" placeholder="Username" />
-                <Input type="email" placeholder="Email" />
-                <Input type="password" placeholder="Password" />
-                <Button className="w-full">Sign Up</Button>
-                <p className="text-center text-sm">
-                  Already have an account?{" "}
-                  <span 
-                    className="text-blue-500 cursor-pointer" 
-                    onClick={() => setIsSigningUp(false)}
-                  >
-                    Login
-                  </span>
-                </p>
-              </>
+              <Button className="w-full" onClick={handleRegister}>Sign Up</Button>
             ) : (
-              <>
-                <Input type="email" placeholder="Email" />
-                <Input type="password" placeholder="Password" />
-                <Button className="w-full">Login</Button>
-                <p className="text-center text-sm">
-                  Don't have an account yet?{" "}
-                  <span 
-                    className="text-blue-500 cursor-pointer" 
-                    onClick={() => setIsSigningUp(true)}
-                  >
-                    Sign Up
-                  </span>
-                </p>
-              </>
+              <Button className="w-full" onClick={handleLogin}>Login</Button>
             )}
+
+            <p className="text-center text-sm">
+              {isSigningUp ? "Already have an account? " : "Don't have an account yet? "}
+              <span className="text-blue-500 cursor-pointer" onClick={() => setIsSigningUp(!isSigningUp)}>
+                {isSigningUp ? "Login" : "Sign Up"}
+              </span>
+            </p>
           </div>
         )}
       </DialogContent>
