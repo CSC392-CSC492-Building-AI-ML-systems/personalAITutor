@@ -4,8 +4,10 @@ from neo4j import GraphDatabase
 from neo4j_graphrag.retrievers import HybridRetriever
 from neo4j_graphrag.llm import OpenAILLM
 from neo4j_graphrag.generation import GraphRAG
+from neo4j_graphrag.types import LLMMessage
 from sentence_transformers import SentenceTransformer
 import os
+import re
 
 app = FastAPI()
 
@@ -54,13 +56,24 @@ rag = GraphRAG(llm=llm, retriever=hybrid_retriever)
 
 class QuestionRequest(BaseModel):
     question: str
+    message_history: list
 
 @app.post("/ask")
 async def ask(request: QuestionRequest):
     question_text = request.question
+    history = request.message_history
+
+    # Sanitize the input query
+    sanitized_question_text = re.sub(r'[^\w\s]', '', question_text)
+
+    message_history = []
+    for qa in history:
+        message_history.append(LLMMessage(role="user", content=qa["question"]))
+        message_history.append(LLMMessage(role="assistant", content=qa["answer"]))
+
     retriever_config = {"top_k": 5}
     try:
-        response = rag.search(query_text=question_text, retriever_config=retriever_config)
+        response = rag.search(query_text=sanitized_question_text, message_history=message_history, retriever_config=retriever_config)
         answer_text = response.answer
         return {"answer": answer_text}
     except Exception as e:

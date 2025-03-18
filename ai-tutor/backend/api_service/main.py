@@ -41,10 +41,14 @@ def ask(course_code):
     question_text = data['question']
 
     try:
+        # Retrieve all questions and answers for the specific course
+        questions_and_answers = db.session.query(Question).filter_by(user_id=user_id, course_name=course_code).order_by(Question.created_at).all()
+        message_history = [{"question": qa.question_text, "answer":qa.answer_text} for qa in questions_and_answers]
+
         # Call the rag_service API
         response = requests.post(
             f"{rag_service_url}/ask",
-            json={"question": question_text}
+            json={"question": question_text, "message_history": message_history}
         )
 
         if response.status_code != 200:

@@ -3,6 +3,14 @@
 import { useRouter } from 'next/navigation';
 import LandingDropdown from "./components/LandingDropdown";
 import { useState, useEffect } from "react";
+import { getAllCourses } from "@/utils/courseUtils";
+
+interface Course {
+  description: string;
+  has_chatbot: boolean;
+  has_roadmap: boolean;
+  name: string;
+}
 
 export default function Home() {
   const router = useRouter();
@@ -14,10 +22,8 @@ export default function Home() {
   useEffect(() => {
     async function fetchCourses() {
       try {
-        const res = await fetch("http://localhost:3000/api/courses");
-        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-
-        const data: string[] = await res.json();
+        const allCoursesResponse = await getAllCourses();
+        const data = allCoursesResponse.courses.map((course: Course) => course.name);
         setCourses(data);
         setSelectedCourse(data[0]);
       } catch (error) {

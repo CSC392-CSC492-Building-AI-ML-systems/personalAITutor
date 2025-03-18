@@ -5,6 +5,7 @@ import CourseDropdown from "../components/CourseDropdown";
 import { useAutoScroll } from "../hooks/autoscroll";
 import { askQuestion } from "@/utils/questionUtils";
 import { getAllCourses, getUserCourses } from '@/utils/courseUtils';
+import { marked } from 'marked';
 
 interface Message {
   text: string;
@@ -74,12 +75,16 @@ export default function Chatbot({
 
   // Fetch courses for sidebar
   useEffect(() => {
-    fetchCourses();
-    if (course && query) {
-      addCourse(course);
-      setInput(query);
-      setfromLanding(true);
-    }
+    const fetchData = async () => {
+      console.log("fetching courses");
+      await fetchCourses();
+      if (course && query) {
+        addCourse(course);
+        setInput(query);
+        setfromLanding(true);
+      }
+    };
+    fetchData();
   }, []);
 
   // send landing message
@@ -164,7 +169,7 @@ export default function Chatbot({
       if (response && response.answer) {
         setMessages((prev) => ({
           ...prev,
-          [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: response.answer, sender: "bot" }],
+          [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: marked(response.answer), sender: "bot" }],
         }));
       } else {
         throw new Error("Invalid response format");
@@ -214,7 +219,7 @@ export default function Chatbot({
             {(messages[selectedCourse!] || []).map((msg, index) => (
               <div key={index} className={`mb-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
                 <div className={`p-3 rounded-lg max-w-3xl ${msg.sender === "user" ? "bg-yellow-100" : "bg-[#E9F3DA]"}`}>
-                  {msg.text}
+                  <div dangerouslySetInnerHTML={{ __html: msg.text }} />
                 </div>
               </div>
             ))}
