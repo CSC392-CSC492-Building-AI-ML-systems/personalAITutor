@@ -6,6 +6,8 @@ from .models import *
 from api_service import db
 import os
 import requests
+import re
+from html import escape
 
 main = Blueprint('main', __name__)
 
@@ -38,6 +40,17 @@ def message_history(course_code):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Custom rate limit exceeded handler
+@limiter.request_filter
+def rate_limit_exceeded():
+    return jsonify({"error": "Rate limit exceeded. Please try again later."}), 429
+
+def sanitize_input(text: str) -> str:
+    # Remove potentially harmful HTML tags and attributes
+    sanitized_text = escape(text)
+    # Further remove any non-alphanumeric characters, except spaces
+    sanitized_text = re.sub(r'[^\w\s]', '', sanitized_text)
+    return sanitized_text.strip()
 
 
 @main.route('/ask/<course_code>', methods=['POST'])
@@ -64,12 +77,12 @@ def ask(course_code):
     try:
         # Retrieve all questions and answers for the specific course
         questions_and_answers = db.session.query(Question).filter_by(user_id=user_id, course_name=course_code).order_by(Question.created_at).all()
-        message_history = [{"question": qa.question_text, "answer":qa.answer_text} for qa in questions_and_answers]
+        message_history = [{"question": sanitize_input(qa.question_text), "answer":sanitize_input(qa.answer_text)} for qa in questions_and_answers]
 
         # Call the rag_service API
         response = requests.post(
             f"{rag_service_url}/ask",
-            json={"question": question_text, "message_history": message_history}
+            json={"question": sanitize_input(question_text), "message_history": message_history}
         )
 
         if response.status_code != 200:

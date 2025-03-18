@@ -7,8 +7,6 @@ from neo4j_graphrag.generation import GraphRAG
 from neo4j_graphrag.types import LLMMessage
 from sentence_transformers import SentenceTransformer
 import os
-import re
-from html import escape
 
 app = FastAPI()
 
@@ -59,13 +57,6 @@ class QuestionRequest(BaseModel):
     question: str
     message_history: list
 
-def sanitize_input(text: str) -> str:
-    # Remove potentially harmful HTML tags and attributes
-    sanitized_text = escape(text)
-    # Further remove any non-alphanumeric characters, except spaces
-    sanitized_text = re.sub(r'[^\w\s]', '', sanitized_text)
-    return sanitized_text.strip()
-
 
 @app.post("/ask")
 async def ask(request: QuestionRequest):
@@ -73,12 +64,12 @@ async def ask(request: QuestionRequest):
     history = request.message_history
 
     # Sanitize the input query
-    sanitized_question_text = sanitize_input(question_text)
+    sanitized_question_text = question_text
 
     message_history = []
     for qa in history:
-        message_history.append(LLMMessage(role="user", content=sanitize_input(qa["question"])))
-        message_history.append(LLMMessage(role="assistant", content=sanitize_input(qa["answer"])))
+        message_history.append(LLMMessage(role="user", content=qa["question"]))
+        message_history.append(LLMMessage(role="assistant", content=qa["answer"]))
 
     retriever_config = {"top_k": 5}
     try:
