@@ -85,7 +85,7 @@ export default function Chatbot({
         ...prev,
         [course]: [...(prev[course] || []), ...messageHistory]
       }));
-      console.log(messages);
+
     } catch (error) {
       console.error("Failed to fetch message history:", error);
     }
