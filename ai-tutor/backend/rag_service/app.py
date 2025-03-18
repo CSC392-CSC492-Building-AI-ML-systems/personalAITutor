@@ -7,6 +7,7 @@ from neo4j_graphrag.generation import GraphRAG
 from neo4j_graphrag.types import LLMMessage
 from sentence_transformers import SentenceTransformer
 import os
+import re
 
 app = FastAPI()
 
@@ -62,15 +63,17 @@ async def ask(request: QuestionRequest):
     question_text = request.question
     history = request.message_history
 
-    message_history = [
-        LLMMessage(role="user", content=qa["question"]) for qa in history
-    ] + [
-        LLMMessage(role="assistant", content=qa["answer"]) for qa in history
-    ]
+    # Sanitize the input query
+    sanitized_question_text = re.sub(r'[^\w\s]', '', question_text)
+
+    message_history = []
+    for qa in history:
+        message_history.append(LLMMessage(role="user", content=qa["question"]))
+        message_history.append(LLMMessage(role="assistant", content=qa["answer"]))
 
     retriever_config = {"top_k": 5}
     try:
-        response = rag.search(query_text=question_text, message_history=message_history, retriever_config=retriever_config)
+        response = rag.search(query_text=sanitized_question_text, message_history=message_history, retriever_config=retriever_config)
         answer_text = response.answer
         return {"answer": answer_text}
     except Exception as e:
