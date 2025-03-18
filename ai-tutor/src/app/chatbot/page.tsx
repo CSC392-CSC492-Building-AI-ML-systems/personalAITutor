@@ -74,12 +74,16 @@ export default function Chatbot({
 
   // Fetch courses for sidebar
   useEffect(() => {
-    fetchCourses();
-    if (course && query) {
-      addCourse(course);
-      setInput(query);
-      setfromLanding(true);
-    }
+    const fetchData = async () => {
+      console.log("fetching courses");
+      await fetchCourses();
+      if (course && query) {
+        addCourse(course);
+        setInput(query);
+        setfromLanding(true);
+      }
+    };
+    fetchData();
   }, []);
 
   // send landing message

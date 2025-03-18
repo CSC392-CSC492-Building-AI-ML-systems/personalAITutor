@@ -65,7 +65,7 @@ async def ask(request: QuestionRequest):
     message_history = [
         LLMMessage(role="user", content=qa["question"]) for qa in history
     ] + [
-        LLMMessage(role="user", content=qa["answer"]) for qa in history
+        LLMMessage(role="assistant", content=qa["answer"]) for qa in history
     ]
 
     retriever_config = {"top_k": 5}
