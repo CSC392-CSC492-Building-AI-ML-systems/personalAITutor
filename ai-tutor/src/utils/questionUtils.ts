@@ -43,6 +43,14 @@ export async function askQuestion(courseCode: string, question: string) {
       body: JSON.stringify({ question }),
     });
 
+    if (response.status === 401) {
+      throw new Error("User not authenticated");
+    }
+
+    if (response.status === 429) {
+      throw new Error("Too many requests");
+    }
+
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
