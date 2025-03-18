@@ -7,7 +7,6 @@ from neo4j_graphrag.generation import GraphRAG
 from neo4j_graphrag.types import LLMMessage
 from sentence_transformers import SentenceTransformer
 import os
-import re
 
 app = FastAPI()
 
@@ -58,13 +57,14 @@ class QuestionRequest(BaseModel):
     question: str
     message_history: list
 
+
 @app.post("/ask")
 async def ask(request: QuestionRequest):
     question_text = request.question
     history = request.message_history
 
     # Sanitize the input query
-    sanitized_question_text = re.sub(r'[^\w\s]', '', question_text)
+    sanitized_question_text = question_text
 
     message_history = []
     for qa in history:

@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import CourseDropdown from "../components/CourseDropdown";
 import { useAutoScroll } from "../hooks/autoscroll";
-import { askQuestion } from "@/utils/questionUtils";
+import { getHistory, askQuestion } from "@/utils/questionUtils";
 import { getAllCourses, getUserCourses } from '@/utils/courseUtils';
 import { marked } from 'marked';
 
@@ -73,19 +73,36 @@ export default function Chatbot({
     }
   };
 
-  // Fetch courses for sidebar
+  // Function to fetch message history
+  const fetchMessageHistory = async (course: string) => {
+    try {
+      const data = await getHistory(course);
+      const messageHistory = data.message_history.map((qa: { question: string, answer: string }) => [
+        { text: qa.question, sender: "user" },
+        { text: marked(qa.answer), sender: "bot" }
+      ]).flat();
+      setMessages((prev) => ({
+        ...prev,
+        [course]: [...(prev[course] || []), ...messageHistory]
+      }));
+
+    } catch (error) {
+      console.error("Failed to fetch message history:", error);
+    }
+  };
+
+  // Fetch courses and message history for sidebar
   useEffect(() => {
     const fetchData = async () => {
-      console.log("fetching courses");
       await fetchCourses();
       if (course && query) {
-        addCourse(course);
+        await addCourse(course);
         setInput(query);
         setfromLanding(true);
       }
     };
     fetchData();
-  }, []);
+  }, [course, query]);
 
   // send landing message
   useEffect(() => {
@@ -102,12 +119,13 @@ export default function Chatbot({
   }, [fromLanding]);
 
   // courses added to sidebar
-  const addCourse = (courseToAdd: string) => {
+  const addCourse = async (courseToAdd: string) => {
     setSidebarCourses((prev) => [...prev, courseToAdd]);
     setAllCourses((prev) => prev.filter((c) => c !== courseToAdd));
     setSelectedCourse(courseToAdd);
     setCourseError(null); // Clear courseToAdd selection error
 
+    // Set initial message from the bot
     setMessages((prev) => ({
       ...prev,
       [courseToAdd]: [
@@ -117,6 +135,11 @@ export default function Chatbot({
         },
       ],
     }));
+
+    if (enrolledCourses.includes(courseToAdd)) {
+      // Fetch and append message history
+      await fetchMessageHistory(courseToAdd);
+    }
   };
 
   // send text
@@ -145,6 +168,16 @@ export default function Chatbot({
     setInput("");
   
     try {
+      // Check if user logged in
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        setMessages((prev) => ({
+          ...prev,
+          [selectedCourse]: [...(prev[selectedCourse].slice(0, -1) || []), { text: "User not authenticated. Please log in!", sender: "bot" }],
+        }));
+        return;
+      }
+
       // Check if the user is enrolled in the selected course
       if (!enrolledCourses.includes(selectedCourse)) {
         setMessages((prev) => ({
@@ -175,11 +208,25 @@ export default function Chatbot({
         throw new Error("Invalid response format");
       }
     } catch (error) {
-      console.error("Error asking question:", error);
-      setMessages((prev) => ({
-        ...prev,
-        [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: "Error generating response. Please try again.", sender: "bot" }],
-      }));
+      if (error.message === "User not authenticated") {
+        console.error("User not authenticated");
+        setMessages((prev) => ({
+          ...prev,
+          [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: "User not authenticated. Please log in!", sender: "bot" }],
+        }));
+      } else if (error.message === "Too many requests") {
+        console.error("Too many requests");
+        setMessages((prev) => ({
+          ...prev,
+          [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: "Too many requests. Please try again later!", sender: "bot" }],
+        }));
+      } else {
+        console.error("Error asking question:", error);
+        setMessages((prev) => ({
+          ...prev,
+          [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: "Error generating response. Please try again!", sender: "bot" }],
+        }));
+      }
     }
   };
 
