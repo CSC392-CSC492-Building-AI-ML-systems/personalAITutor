@@ -19,6 +19,27 @@ limiter = Limiter(
 def get_rag_service_url(course_code):
     return os.getenv(f"RAG_SERVICE_{course_code}_URL")
 
+@main.route('/message_history/<course_code>', methods=['GET'])
+@jwt_required()
+def message_history(course_code):
+    user_id = get_jwt_identity()
+
+    # Check if the user is enrolled in the course
+    enrollment = db.session.query(user_courses).filter_by(user_id=user_id, course_name=course_code).first()
+    if not enrollment:
+        return jsonify({"error": "User not enrolled in the course"}), 403
+
+    try:
+        # Retrieve all questions and answers for the specific course
+        questions_and_answers = db.session.query(Question).filter_by(user_id=user_id, course_name=course_code).order_by(Question.created_at).all()
+        message_history = [{"question": qa.question_text, "answer":qa.answer_text} for qa in questions_and_answers]
+
+        return jsonify({"message_history": message_history})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
 @main.route('/ask/<course_code>', methods=['POST'])
 @jwt_required()
 @limiter.limit("5 per minute", key_func=get_jwt_identity)
