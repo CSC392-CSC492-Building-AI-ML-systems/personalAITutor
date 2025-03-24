@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card, CardContent } from "./ui/card";
-import Profile from "./profile"; 
+import Profile from "./profile";
 
 type User = {
   name?: string;

@@ -27,13 +27,17 @@ def message_history(course_code):
     user_id = get_jwt_identity()
 
     # Check if the user is enrolled in the course
-    enrollment = db.session.query(user_courses).filter_by(user_id=user_id, course_name=course_code).first()
+    enrollment = db.session.query(user_courses).filter_by(user_id=user_id, course_code=course_code).first()
     if not enrollment:
         return jsonify({"error": "User not enrolled in the course"}), 403
 
     try:
         # Retrieve all questions and answers for the specific course
-        questions_and_answers = db.session.query(Question).filter_by(user_id=user_id, course_name=course_code).order_by(Question.created_at).all()
+        questions_and_answers = db.session.query(Question).filter_by(user_id=user_id, course_code=course_code).order_by(Question.created_at).all()
+
+        if not questions_and_answers:
+            return jsonify({"message": "No message history found for this course"}), 200
+
         message_history = [{"question": qa.question_text, "answer":qa.answer_text} for qa in questions_and_answers]
 
         return jsonify({"message_history": message_history})
@@ -64,19 +68,19 @@ def ask(course_code):
     user_id = get_jwt_identity()
 
     # Check if the user is enrolled in the course
-    enrollment = db.session.query(user_courses).filter_by(user_id=user_id, course_name=course_code).first()
+    enrollment = db.session.query(user_courses).filter_by(user_id=user_id, course_code=course_code).first()
     if not enrollment:
         return jsonify({"error": "User not enrolled in the course"}), 403
 
     rag_service_url = get_rag_service_url(course_code)
     if not rag_service_url:
-        return jsonify({"error": "Invalid course_name"}), 400
+        return jsonify({"error": "Invalid course_code"}), 400
 
     question_text = data['question']
 
     try:
         # Retrieve all questions and answers for the specific course
-        questions_and_answers = db.session.query(Question).filter_by(user_id=user_id, course_name=course_code).order_by(Question.created_at).all()
+        questions_and_answers = db.session.query(Question).filter_by(user_id=user_id, course_code=course_code).order_by(Question.created_at).all()
         message_history = [{"question": sanitize_input(qa.question_text), "answer":sanitize_input(qa.answer_text)} for qa in questions_and_answers]
 
         # Call the rag_service API
@@ -95,7 +99,7 @@ def ask(course_code):
             user_id=user_id,
             question_text=question_text,
             answer_text=answer_text,
-            course_name=course_code
+            course_code=course_code
         )
         db.session.add(question)
         db.session.commit()

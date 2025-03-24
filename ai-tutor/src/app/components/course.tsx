@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 
 type Course = {
-  name: string;
+  code: string;
 };
 
 type CourseProps = {
@@ -24,8 +23,8 @@ export default function Course({ enrolledCourses, availableCourses, onEnroll, on
         {enrolledCourses.length > 0 ? (
           <ul className="space-y-2">
             {enrolledCourses.map((course) => (
-              <li key={course.name} className="flex justify-between items-center p-2 border rounded">
-                <span>{course.name}</span>
+              <li key={course.code} className="flex justify-between items-center p-2 border rounded">
+                <span>{course.code}</span>
                 <Button
                 className="bg-[#FFF0D2] text-black border hover:bg-[#FFE0A3]"
                 onClick={() => onUnenroll(course)}
@@ -46,8 +45,8 @@ export default function Course({ enrolledCourses, availableCourses, onEnroll, on
         {availableCourses.length > 0 ? (
           <ul className="space-y-2">
             {availableCourses.map((course) => (
-              <li key={course.name} className="flex justify-between items-center p-2 border rounded">
-                <span>{course.name}</span>
+              <li key={course.code} className="flex justify-between items-center p-2 border rounded">
+                <span>{course.code}</span>
                 <Button
                 className="bg-[#FFF0D2] text-black border hover:bg-[#FFE0A3]"
                 onClick={() => onEnroll(course)}

@@ -53,19 +53,19 @@ def logout():
         return jsonify({"error": str(e)}), 500
 
 
-@auth.route('/delete-questions/<course_name>', methods=['DELETE'])
+@auth.route('/delete-questions/<course_code>', methods=['DELETE'])
 @jwt_required()
-def delete_questions(course_name):
+def delete_questions(course_code):
     user_id = get_jwt_identity()
 
     try:
         # Check if there are any questions to delete for the specified course
-        questions = Question.query.filter_by(user_id=user_id, course_name=course_name).all()
+        questions = Question.query.filter_by(user_id=user_id, course_code=course_code).all()
         if not questions:
             return jsonify({"message": "No questions to delete for the specified course"}), 200
 
         # Delete all questions for the authenticated user and specified course
-        Question.query.filter_by(user_id=user_id, course_name=course_name).delete()
+        Question.query.filter_by(user_id=user_id, course_code=course_code).delete()
         db.session.commit()
         return jsonify({"message": "All questions and answers for the specified course deleted successfully"}), 200
     except Exception as e:
@@ -79,7 +79,7 @@ def delete_user():
     try:
         # Retrieve the course codes associated with the user using the association table's columns
         course_codes = [
-            row[0] for row in db.session.query(user_courses.c.course_name)
+            row[0] for row in db.session.query(user_courses.c.course_code)
             .filter(user_courses.c.user_id == user_id).all()
         ]
 
@@ -88,14 +88,14 @@ def delete_user():
             # Delete all questions for this user and course
             db.session.query(Question).filter(
                 Question.user_id == user_id,
-                Question.course_name == course_code
+                Question.course_code == course_code
             ).delete(synchronize_session=False)
 
             # Delete the user's enrollment from the association table
             db.session.execute(
                 user_courses.delete().where(
                     user_courses.c.user_id == user_id,
-                    user_courses.c.course_name == course_code
+                    user_courses.c.course_code == course_code
                 )
             )
 

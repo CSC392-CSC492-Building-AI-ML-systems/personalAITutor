@@ -6,10 +6,11 @@ import { useState, useEffect } from "react";
 import { getAllCourses } from "@/utils/courseUtils";
 
 interface Course {
+  name: string;
   description: string;
   has_chatbot: boolean;
   has_roadmap: boolean;
-  name: string;
+  code: string;
 }
 
 export default function Home() {
@@ -23,7 +24,7 @@ export default function Home() {
     async function fetchCourses() {
       try {
         const allCoursesResponse = await getAllCourses();
-        const data = allCoursesResponse.courses.map((course: Course) => course.name);
+        const data = allCoursesResponse.courses.map((course: Course) => course.code);
         setCourses(data);
         setSelectedCourse(data[0]);
       } catch (error) {
