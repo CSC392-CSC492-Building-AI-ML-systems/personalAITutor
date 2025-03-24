@@ -20,11 +20,12 @@ def update_courses():
             courses = json.load(file)
 
             for course_data in courses:
-                course = Course.query.filter_by(name=course_data['name']).first()
+                course = Course.query.filter_by(code=course_data['code']).first()
                 if course:
+                    course.name = course_data['name']
                     course.description = course_data['description']
                 else:
-                    course = Course(name=course_data['name'], description=course_data['description'])
+                    course = Course(code=course_data['code'], name=course_data['name'], description=course_data['description'])
                     db.session.add(course)
             db.session.commit()
 

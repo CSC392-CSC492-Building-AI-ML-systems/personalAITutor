@@ -13,10 +13,11 @@ interface Message {
 }
 
 interface Course {
+  name: string;
   description: string;
   has_chatbot: boolean;
   has_roadmap: boolean;
-  name: string;
+  code: string;
 }
 
 export default function Chatbot({ 
@@ -27,31 +28,23 @@ export default function Chatbot({
 
   const { course, query } = use(searchParams);
 
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null); // currently selected course
-  const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]); // enrolled courses
-  const [chatbotCourses, setChatbotCourses] = useState<string[]>([]); // courses that have chatbot
-  const [allCourses, setAllCourses] = useState<string[]>([]); // all courses
-  const [sidebarCourses, setSidebarCourses] = useState<string[]>([]); // courses that user add to the sidebar
- 
-  //message
+  // State variables
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
+  const [chatbotCourses, setChatbotCourses] = useState<string[]>([]);
+  const [allCourses, setAllCourses] = useState<string[]>([]);
+  const [sidebarCourses, setSidebarCourses] = useState<string[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
-
-  const [fromLanding, setfromLanding] = useState(false);
-  
-  //input
+  const [fromLanding, setFromLanding] = useState(false);
   const [input, setInput] = useState("");
   const [courseError, setCourseError] = useState<string | null>(null);
-  //autoscroll
   const { chatRef, scrollToBottom } = useAutoScroll();
-  
-  // Error message after 5 seconds
+
+  // Clear error message after 5 seconds
   useEffect(() => {
     if (courseError) {
-      const timer = setTimeout(() => {
-        setCourseError(null);
-      }, 5000); 
-
-      return () => clearTimeout(timer); // Cleanup timeout
+      const timer = setTimeout(() => setCourseError(null), 5000);
+      return () => clearTimeout(timer);
     }
   }, [courseError]);
 
@@ -60,32 +53,44 @@ export default function Chatbot({
     try {
       const allCoursesResponse = await getAllCourses();
       const userCoursesResponse = await getUserCourses();
-      const allCourses = allCoursesResponse.courses.map((course: Course) => course.name);
-      const enrolledCourses = userCoursesResponse.courses.map((course: Course) => course.name);
+      const allCourseCodes = allCoursesResponse.courses.map(
+        (course: Course) => course.code
+      );
+      const enrolledCourseCodes = userCoursesResponse.courses.map(
+        (course: Course) => course.code
+      );
       const coursesWithChatbot = allCoursesResponse.courses
         .filter((course: Course) => course.has_chatbot)
-        .map((course: Course) => course.name);
-      setAllCourses(allCourses);
+        .map((course: Course) => course.code);
+      setAllCourses(allCourseCodes);
       setChatbotCourses(coursesWithChatbot);
-      setEnrolledCourses(enrolledCourses);
+      setEnrolledCourses(enrolledCourseCodes);
     } catch (error) {
       console.error("Failed to fetch courses:", error);
     }
   };
 
-  // Function to fetch message history
+  // Function to fetch message history for a given course
   const fetchMessageHistory = async (course: string) => {
     try {
       const data = await getHistory(course);
-      const messageHistory = data.message_history.map((qa: { question: string, answer: string }) => [
-        { text: qa.question, sender: "user" },
-        { text: marked(qa.answer), sender: "bot" }
-      ]).flat();
+      if (data.length === 0) {
+        setMessages((prev) => ({
+          ...prev,
+          [course]: [],
+        }));
+        return;
+      }
+      const messageHistory = data.message_history
+        .map((qa: { question: string; answer: string }) => [
+          { text: qa.question, sender: "user" },
+          { text: marked(qa.answer), sender: "bot" },
+        ])
+        .flat();
       setMessages((prev) => ({
         ...prev,
-        [course]: [...(prev[course] || []), ...messageHistory]
+        [course]: [...(prev[course] || []), ...messageHistory],
       }));
-
     } catch (error) {
       console.error("Failed to fetch message history:", error);
     }
@@ -98,7 +103,7 @@ export default function Chatbot({
       if (course && query) {
         await addCourse(course);
         setInput(query);
-        setfromLanding(true);
+        setFromLanding(true);
       }
     };
     fetchData();
@@ -156,24 +161,30 @@ export default function Chatbot({
       ...prev,
       [selectedCourse]: [...(prev[selectedCourse] || []), { text: input, sender: "user" }],
     }));
-  
+
     scrollToBottom();
-  
+
     // Placeholder message while waiting for response
     setMessages((prev) => ({
       ...prev,
-      [selectedCourse]: [...prev[selectedCourse], { text: "...", sender: "bot" }],
+      [selectedCourse]: [
+        ...prev[selectedCourse],
+        { text: "...", sender: "bot" },
+      ],
     }));
-  
+
     setInput("");
-  
+
     try {
       // Check if user logged in
       const token = localStorage.getItem("authToken");
       if (!token) {
         setMessages((prev) => ({
           ...prev,
-          [selectedCourse]: [...(prev[selectedCourse].slice(0, -1) || []), { text: "User not authenticated. Please log in!", sender: "bot" }],
+          [selectedCourse]: [
+            ...prev[selectedCourse].slice(0, -1),
+            { text: "User not authenticated. Please log in!", sender: "bot" },
+          ],
         }));
         return;
       }
@@ -182,7 +193,10 @@ export default function Chatbot({
       if (!enrolledCourses.includes(selectedCourse)) {
         setMessages((prev) => ({
           ...prev,
-          [selectedCourse]: [...(prev[selectedCourse].slice(0, -1) || []), { text: "Not enrolled in this course!", sender: "bot" }],
+          [selectedCourse]: [
+            ...prev[selectedCourse].slice(0, -1),
+            { text: "Not enrolled in this course!", sender: "bot" },
+          ],
         }));
         return;
       }
@@ -191,41 +205,59 @@ export default function Chatbot({
       if (!chatbotCourses.includes(selectedCourse)) {
         setMessages((prev) => ({
           ...prev,
-          [selectedCourse]: [...(prev[selectedCourse].slice(0, -1) || []), { text: "This course does not have a chatbot yet!", sender: "bot" }],
+          [selectedCourse]: [
+            ...prev[selectedCourse].slice(0, -1),
+            { text: "This course does not have a chatbot yet!", sender: "bot" },
+          ],
         }));
         return;
       }
 
-      // Call askQuestion instead of making direct fetch request
+      // Call askQuestion and wait for response
       const response = await askQuestion(selectedCourse, input);
-  
       if (response && response.answer) {
+        // Await the parsed markdown if necessary
+        const parsedAnswer = await marked(response.answer);
         setMessages((prev) => ({
           ...prev,
-          [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: marked(response.answer), sender: "bot" }],
+          [selectedCourse]: [
+            ...prev[selectedCourse].slice(0, -1),
+            { text: parsedAnswer, sender: "bot" },
+          ],
         }));
       } else {
         throw new Error("Invalid response format");
       }
     } catch (error) {
+      // @ts-expect-error error has message property
       if (error.message === "User not authenticated") {
-        console.error("User not authenticated");
         setMessages((prev) => ({
           ...prev,
-          [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: "User not authenticated. Please log in!", sender: "bot" }],
+          [selectedCourse]: [
+            ...prev[selectedCourse].slice(0, -1),
+            { text: "User not authenticated. Please log in!", sender: "bot" },
+          ],
         }));
-      } else if (error.message === "Too many requests") {
-        console.error("Too many requests");
-        setMessages((prev) => ({
-          ...prev,
-          [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: "Too many requests. Please try again later!", sender: "bot" }],
-        }));
-      } else {
-        console.error("Error asking question:", error);
-        setMessages((prev) => ({
-          ...prev,
-          [selectedCourse]: [...prev[selectedCourse].slice(0, -1), { text: "Error generating response. Please try again!", sender: "bot" }],
-        }));
+      } else if // @ts-expect-error error has message property
+        (error.message === "Too many requests")
+        {
+          setMessages((prev) => ({
+            ...prev,
+            [selectedCourse]: [
+              ...prev[selectedCourse].slice(0, -1),
+              {text: "Too many requests. Please try again later!", sender: "bot"},
+            ],
+          }));
+        }
+      else {
+          console.error("Error asking question:", error);
+          setMessages((prev) => ({
+            ...prev,
+            [selectedCourse]: [
+              ...prev[selectedCourse].slice(0, -1),
+              { text: "Error generating response. Please try again!", sender: "bot" },
+            ],
+          }));
       }
     }
   };
@@ -233,7 +265,6 @@ export default function Chatbot({
   return (
     <div className="h-full flex flex-col bg-white">
       <div className="flex flex-1 overflow-hidden">
-        
         {/* Sidebar */}
         <aside className="w-1/4 border-r p-4 bg-white">
           <h1 className="relative text-5xl uppercase w-fit mx-auto">
@@ -247,7 +278,11 @@ export default function Chatbot({
                 className={`p-3 rounded-md text-center text-2xl ${
                   selectedCourse === course ? "font-semibold" : ""
                 }`}
-                style={selectedCourse === course ? { backgroundColor: "#FFF0D2" } : { backgroundColor: "#FAFAEB" }}
+                style={
+                  selectedCourse === course
+                    ? { backgroundColor: "#FFF0D2" }
+                    : { backgroundColor: "#FAFAEB" }
+                }
                 onClick={() => {
                   setSelectedCourse(course);
                   setCourseError(null);
@@ -256,47 +291,69 @@ export default function Chatbot({
                 {course}
               </button>
             ))}
-            <CourseDropdown availableCourses={allCourses} sidebarCourses={sidebarCourses} addCourse={addCourse} />
+            <CourseDropdown
+              availableCourses={allCourses}
+              sidebarCourses={sidebarCourses}
+              addCourse={addCourse}
+            />
           </div>
         </aside>
-  
+
         {/* Chat Area */}
         <main className="flex-1 flex flex-col h-full">
           <div ref={chatRef} className="flex-1 p-4 overflow-y-auto min-h-0">
-            {(messages[selectedCourse!] || []).map((msg, index) => (
-              <div key={index} className={`mb-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`p-3 rounded-lg max-w-3xl ${msg.sender === "user" ? "bg-yellow-100" : "bg-[#E9F3DA]"}`}>
-                  <div dangerouslySetInnerHTML={{ __html: msg.text }} />
+            {(selectedCourse && messages[selectedCourse]
+              ? messages[selectedCourse]
+              : []
+            ).map((msg, index) => (
+              <div
+                key={index}
+                className={`mb-2 flex ${
+                  msg.sender === "user"
+                    ? "justify-end"
+                    : "justify-start"
+                }`}
+              >
+                <div
+                  className={`p-3 rounded-lg max-w-3xl ${
+                    msg.sender === "user"
+                      ? "bg-yellow-100"
+                      : "bg-[#E9F3DA]"
+                  }`}
+                >
+                  <div
+                    dangerouslySetInnerHTML={{ __html: msg.text }}
+                  />
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Input Box - Fixed at Bottom */}
+          {/* Input Box */}
           <div className="p-4 bg-white border-t flex flex-col items-center">
-            {/* Error Message (if no course is selected) */}
             {courseError && (
-             <div className=" text-black-600 font-semibold text-lg py-2 px-4 rounded-md text-center mb-2 " style={ {backgroundColor: "#E9F3DA"}}>
-              {courseError}
+              <div
+                className="text-black-600 font-semibold text-lg py-2 px-4 rounded-md text-center mb-2"
+                style={{ backgroundColor: "#E9F3DA" }}
+              >
+                {courseError}
               </div>
             )}
-            
             <div className="relative w-full">
-              {/* Input Field */}
               <input
                 type="text"
                 className="w-full p-4 pr-12 border-none rounded-full bg-[#FFF0D2] focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 placeholder="Type a message..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && sendMessage()
+                }
               />
-              
-              {/* Send Button (Inside Input) */}
               <button
                 className="text-3xl absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
                 onClick={sendMessage}
-              > 
+              >
                 ➤
               </button>
             </div>

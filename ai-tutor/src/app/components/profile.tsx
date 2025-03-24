@@ -14,7 +14,7 @@ type User = {
 };
 
 type CourseType = {
-  name: string;
+  code: string;
 };
 
 export default function Profile({ user, setUser, onClose }: { user: User; setUser: any; onClose: () => void }) {
@@ -35,7 +35,7 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
       if (allCoursesResponse && userCoursesResponse) {
         const enrolledCourses = userCoursesResponse.courses;
         const availableCourses = allCoursesResponse.courses.filter((course: CourseType) => 
-          !enrolledCourses.some((enrolledCourse: CourseType) => enrolledCourse.name === course.name)
+          !enrolledCourses.some((enrolledCourse: CourseType) => enrolledCourse.code === course.code)
         );
         setEnrolledCourses(enrolledCourses);
         setAvailableCourses(availableCourses);
@@ -59,7 +59,8 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
   };
 
   //  Handle Login
-  const handleLogin = async () => {
+const handleLogin = async () => {
+  try {
     const response = await login(email, password);
     if (response) {
       localStorage.setItem("authToken", response.access_token);
@@ -69,7 +70,15 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
       await fetchAndSetCourses();
       onClose();
     }
-  };
+  } catch (error) {
+    // @ts-expect-error error has message property
+    if (error.message === "Invalid credentials") {
+      alert("Invalid credentials. Please try again.");
+    } else {
+      console.error("Failed to login:", error);
+    }
+  }
+};
 
   // Handle Logout
   const handleLogout = async () => {
@@ -83,7 +92,7 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
   // Handle Course Enrollment
   const handleEnroll = async (course: CourseType) => {
     try {
-      const response = await enrollCourse(course.name);
+      const response = await enrollCourse(course.code);
       if (response) {
         await fetchAndSetCourses(); // Fetch and set courses after enrollment
       }
@@ -95,7 +104,7 @@ export default function Profile({ user, setUser, onClose }: { user: User; setUse
   // Handle Course Unenrollment
   const handleUnenroll = async (course: CourseType) => {
     try {
-      const response = await dropCourse(course.name);
+      const response = await dropCourse(course.code);
       if (response) {
         await fetchAndSetCourses(); // Fetch and set courses after enrollment
       }

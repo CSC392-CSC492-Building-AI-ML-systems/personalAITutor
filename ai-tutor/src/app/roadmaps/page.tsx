@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { getAllCourses } from "@/utils/courseUtils";
 
 interface Course {
+  name: string;
   description: string;
   has_chatbot: boolean;
   has_roadmap: boolean;
-  name: string;
+  code: string;
 }
 
 export default function Roadmaps() {
@@ -19,7 +20,7 @@ export default function Roadmaps() {
     async function fetchCourses() {
       try {
         const data = await getAllCourses();
-        const coursesWithRoadmap = data.courses.filter((course: Course) => course.has_roadmap).map((course: Course) => course.name);
+        const coursesWithRoadmap = data.courses.filter((course: Course) => course.has_roadmap).map((course: Course) => course.code);
         setCourses(coursesWithRoadmap);
       } catch (error) {
         console.error("Failed to fetch courses:", error);

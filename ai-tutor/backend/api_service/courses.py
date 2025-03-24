@@ -25,13 +25,13 @@ def add_user_to_course(course_code):
     user_id = get_jwt_identity()
 
     # Check if the user is already enrolled in the course
-    enrollment = db.session.query(user_courses).filter_by(user_id=user_id, course_name=course_code).first()
+    enrollment = db.session.query(user_courses).filter_by(user_id=user_id, course_code=course_code).first()
     if enrollment:
         return jsonify({"error": "User already enrolled in the course"}), 400
 
     try:
         # Add the user to the course
-        new_enrollment = user_courses.insert().values(user_id=user_id, course_name=course_code)
+        new_enrollment = user_courses.insert().values(user_id=user_id, course_code=course_code)
         db.session.execute(new_enrollment)
         db.session.commit()
         return jsonify({"message": "User added to course successfully"}), 200
@@ -45,10 +45,10 @@ def drop_course(course_code):
 
     try:
         # Delete all questions for the authenticated user and specified course
-        Question.query.filter_by(user_id=user_id, course_name=course_code).delete()
+        Question.query.filter_by(user_id=user_id, course_code=course_code).delete()
 
         # Delete the user's enrollment in the course
-        delete_enrollment = user_courses.delete().where(user_courses.c.user_id == user_id, user_courses.c.course_name == course_code)
+        delete_enrollment = user_courses.delete().where(user_courses.c.user_id == user_id, user_courses.c.course_code == course_code)
         db.session.execute(delete_enrollment)
 
         db.session.commit()
@@ -65,7 +65,7 @@ def get_user_courses():
     try:
         # Fetch all courses the user is enrolled in
         courses = db.session.query(Course).join(user_courses).filter(user_courses.c.user_id == user_id).all()
-        course_list = [{"name": course.name, "description": course.description} for course in courses]
+        course_list = [{"code": course.code, "description": course.description} for course in courses]
         return jsonify({"courses": course_list}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -76,10 +76,11 @@ def get_available_courses():
         courses = db.session.query(Course).all()
         course_list = []
         for course in courses:
-            course_code = course.name.upper()
+            course_code = course.code.upper()
             roadmap_exists = os.path.isfile(f'assets/{course_code}_flowchart.txt')
             chatbot_exists = bool(get_rag_service_url(course_code))
             course_list.append({
+                "code": course.code,
                 "name": course.name,
                 "description": course.description,
                 "has_roadmap": roadmap_exists,

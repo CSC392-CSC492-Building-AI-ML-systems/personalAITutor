@@ -65,7 +65,7 @@ const getDomain = (url) => {
     const hostname = new URL(url).hostname;
     return hostname.replace(/^www\./, "");
   } catch (e) {
-    return "unknown";
+    console.error("unknown domain, error parsing URL", e);
   }
 };
 
