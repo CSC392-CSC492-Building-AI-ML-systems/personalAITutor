@@ -18,6 +18,9 @@ export async function getHistory(courseCode: string) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     const data = await response.json();
+    if (data.message === "No message history found for this course") {
+      return [];
+    }
 
     return data;
   } catch (error) {
