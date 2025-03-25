@@ -25,10 +25,8 @@ export default function Chatbot({
 }: {
   searchParams: Promise<{ course: string; query: string }>;
 }) {
-  // Extract search parameters (assuming experimental use() hook is acceptable)
   const { course, query } = use(searchParams);
 
-  // State variables
   const [activeCourse, setActiveCourse] = useState<string | null>(null);
   const [selectedSidebarCourses, setSelectedSidebarCourses] = useState<string[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
@@ -40,7 +38,6 @@ export default function Chatbot({
   const [courseError, setCourseError] = useState<string | null>(null);
   const { chatRef, scrollToBottom } = useAutoScroll();
 
-  // Clear error message after 5 seconds
   useEffect(() => {
     if (courseError) {
       const timer = setTimeout(() => setCourseError(null), 5000);
@@ -48,7 +45,6 @@ export default function Chatbot({
     }
   }, [courseError]);
 
-  // Fetch courses from the backend
   const fetchCourses = useCallback(async () => {
     try {
       const allCoursesResponse = await getAllCourses();
@@ -65,12 +61,22 @@ export default function Chatbot({
       setAllCourses(allCourseCodes);
       setEnrolledCourses(enrolledCourseCodes);
       setChatbotCourses(coursesWithChatbot);
+      for (const courseCode of enrolledCourseCodes) {
+        const data = await getHistory(courseCode);
+        if (data && data.length !== 0) {
+          setSelectedSidebarCourses((prev) => {
+            if (!prev.includes(courseCode)) {
+              return [...prev, courseCode];
+            }
+            return prev;
+          });
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch courses:", error);
     }
   }, []);
 
-  // Fetch message history for a given course, then scroll to bottom
   const fetchMessageHistory = useCallback(
     async (course: string) => {
       try {
@@ -93,6 +99,12 @@ export default function Chatbot({
           ...prev,
           [course]: [...(prev[course] || []), ...messageHistory],
         }));
+        setSelectedSidebarCourses((prev) => {
+          if (!prev.includes(course)) {
+            return [...prev, course];
+          }
+          return prev;
+        });
         scrollToBottom();
       } catch (error) {
         console.error("Failed to fetch message history:", error);
@@ -101,7 +113,6 @@ export default function Chatbot({
     [scrollToBottom]
   );
 
-  // Re-check enrollment status by calling getUserCourses
   const updateEnrollmentStatus = useCallback(async () => {
     try {
       const userCoursesResponse = await getUserCourses();
@@ -116,53 +127,33 @@ export default function Chatbot({
     }
   }, [enrolledCourses]);
 
-  // When a sidebar course is clicked, mark it as selected and active.
-  const handleCourseClick = useCallback((courseCode: string) => {
-    setActiveCourse(courseCode);
-    setCourseError(null);
+  const addCourse = useCallback(async (courseCode: string) => {
     setSelectedSidebarCourses((prev) => {
       if (!prev.includes(courseCode)) {
-        scrollToBottom();
         return [...prev, courseCode];
       }
-      scrollToBottom();
       return prev;
     });
-  }, [scrollToBottom]);
+    setActiveCourse(courseCode);
+    setCourseError(null);
 
-  // Add a course to the sidebar (if not already added)
-  const addCourse = useCallback(
-    async (courseToAdd: string) => {
-      setSelectedSidebarCourses((prev) => {
-        if (!prev.includes(courseToAdd)) {
-          return [...prev, courseToAdd];
-        }
-        return prev;
-      });
-      setActiveCourse(courseToAdd);
-      setCourseError(null);
+    setMessages((prev) => ({
+      ...prev,
+      [courseCode]: [
+        {
+          text: `Hi, I’m Advisory, your personal AI tutor for ${courseCode}. How can I help you?`,
+          sender: "bot",
+        },
+      ],
+    }));
 
-      // Set initial bot message for this course
-      setMessages((prev) => ({
-        ...prev,
-        [courseToAdd]: [
-          {
-            text: `Hi, I’m Advisory, your personal AI tutor for ${courseToAdd}. How can I help you?`,
-            sender: "bot",
-          },
-        ],
-      }));
+    const updatedEnrollments = await updateEnrollmentStatus();
+    if (updatedEnrollments.includes(courseCode)) {
+      await fetchMessageHistory(courseCode);
+    }
+    scrollToBottom();
+  }, [fetchMessageHistory, scrollToBottom, updateEnrollmentStatus]);
 
-      // Re-run enrollment check and fetch message history if enrolled
-      const updatedEnrollments = await updateEnrollmentStatus();
-      if (updatedEnrollments.includes(courseToAdd)) {
-        await fetchMessageHistory(courseToAdd);
-      }
-    },
-    [fetchMessageHistory, updateEnrollmentStatus]
-  );
-
-  // Send a message to the chatbot after updating enrollment status
   const sendMessage = useCallback(async () => {
     if (!input.trim()) return;
     if (!activeCourse) {
@@ -170,7 +161,6 @@ export default function Chatbot({
       return;
     }
 
-    // Check for authentication token
     const token = localStorage.getItem("authToken");
     if (!token) {
       setMessages((prev) => ({
@@ -183,7 +173,26 @@ export default function Chatbot({
       return;
     }
 
-    // Update enrollment status before sending the message
+    setMessages((prev) => ({
+      ...prev,
+      [activeCourse]: [
+        ...(prev[activeCourse] || []),
+        { text: input, sender: "user" },
+      ],
+    }));
+
+    scrollToBottom();
+
+    setMessages((prev) => ({
+      ...prev,
+      [activeCourse]: [
+        ...prev[activeCourse],
+        { text: "...", sender: "bot" },
+      ],
+    }));
+
+    setInput("");
+
     const updatedEnrollments = await updateEnrollmentStatus();
     if (!updatedEnrollments.includes(activeCourse)) {
       setMessages((prev) => ({
@@ -196,29 +205,6 @@ export default function Chatbot({
       return;
     }
 
-    // Append user's message
-    setMessages((prev) => ({
-      ...prev,
-      [activeCourse]: [
-        ...(prev[activeCourse] || []),
-        { text: input, sender: "user" },
-      ],
-    }));
-
-    scrollToBottom();
-
-    // Append a placeholder for the bot's response
-    setMessages((prev) => ({
-      ...prev,
-      [activeCourse]: [
-        ...prev[activeCourse],
-        { text: "...", sender: "bot" },
-      ],
-    }));
-
-    setInput("");
-
-    // Check if the course has a chatbot
     if (!chatbotCourses.includes(activeCourse)) {
       setMessages((prev) => ({
         ...prev,
@@ -231,7 +217,6 @@ export default function Chatbot({
     }
 
     try {
-      // Ask and update the conversation
       const response = await askQuestion(activeCourse, input);
       if (response && response.answer) {
         const parsedAnswer = await marked(response.answer);
@@ -275,7 +260,6 @@ export default function Chatbot({
     }
   }, [input, activeCourse, chatbotCourses, scrollToBottom, updateEnrollmentStatus]);
 
-  // Fetch initial courses and, if search params exist, add the course with query pre-filled
   useEffect(() => {
     const fetchData = async () => {
       await fetchCourses();
@@ -285,10 +269,9 @@ export default function Chatbot({
         setFromLanding(true);
       }
     };
-    fetchData();
+    fetchData().catch((error) => console.error("Failed to fetch data:", error));
   }, [course, query, fetchCourses, addCourse]);
 
-  // If coming from landing with a query, send the landing message once
   useEffect(() => {
     if (fromLanding) {
       sendMessage().catch((error) =>
@@ -300,7 +283,6 @@ export default function Chatbot({
   return (
     <div className="h-full flex flex-col bg-white">
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
         <aside className="w-1/4 border-r p-4 bg-white">
           <h1 className="relative text-5xl uppercase w-fit mx-auto">
             <span className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-6 w-full bg-[#E9F3DA]" />
@@ -318,7 +300,7 @@ export default function Chatbot({
                     ? { backgroundColor: "#FFF0D2" }
                     : { backgroundColor: "#FAFAEB" }
                 }
-                onClick={() => handleCourseClick(courseCode)}
+                onClick={() => addCourse(courseCode)}
               >
                 {courseCode}
               </button>
@@ -330,8 +312,6 @@ export default function Chatbot({
             />
           </div>
         </aside>
-
-        {/* Chat Area */}
         <main className="flex-1 flex flex-col h-full">
           <div ref={chatRef} className="flex-1 p-4 overflow-y-auto min-h-0">
             {(activeCourse && messages[activeCourse]
@@ -348,8 +328,6 @@ export default function Chatbot({
               </div>
             ))}
           </div>
-
-          {/* Input Box */}
           <div className="p-4 bg-white border-t flex flex-col items-center">
             {courseError && (
               <div
