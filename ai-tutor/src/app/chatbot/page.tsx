@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, use } from "react";
 import CourseDropdown from "../components/CourseDropdown";
 import { useAutoScroll } from "../hooks/autoscroll";
-import { getHistory, askQuestion } from "@/utils/questionUtils";
+import { getHistory, deleteHistory, askQuestion } from "@/utils/questionUtils";
 import { getAllCourses, getUserCourses } from "@/utils/courseUtils";
 import { marked } from "marked";
 
@@ -157,6 +157,20 @@ export default function Chatbot({
     scrollToBottom();
   }, [fetchMessageHistory, scrollToBottom, updateEnrollmentStatus, allCourses]);
 
+  const removeCourse = useCallback(async (courseCode: string) => {
+    try {
+      await deleteHistory(courseCode);
+      setSelectedSidebarCourses((prev) => prev.filter(c => c.code !== courseCode));
+      if (activeCourse === courseCode) {
+        setActiveCourse(null);
+      }
+      // Refetch courses to update the sidebar
+      await fetchCourses();
+    } catch (error) {
+      console.error("Failed to delete course history:", error);
+    }
+  }, [activeCourse, fetchCourses]);
+
   const sendMessage = useCallback(async () => {
     if (!input.trim()) return;
     if (!activeCourse) {
@@ -293,20 +307,20 @@ export default function Chatbot({
           </h1>
           <div className="flex flex-col space-y-2 mt-6">
             {selectedSidebarCourses.map((course) => (
-              <button
-                key={course.code}
-                className={`p-3 rounded-md text-center text-2xl ${
-                  activeCourse === course.code ? "font-semibold" : ""
-                }`}
-                style={
-                  activeCourse === course.code
-                    ? { backgroundColor: "#FFF0D2" }
-                    : { backgroundColor: "#FAFAEB" }
-                }
-                onClick={() => addCourse(course.code)}
-              >
-                {course.code} - {course.name}
-              </button>
+              <div key={course.code} className="flex items-center justify-between p-3 rounded-md text-center text-2xl" style={activeCourse === course.code ? { backgroundColor: "#FFF0D2" } : { backgroundColor: "#FAFAEB" }}>
+                <button
+                  className={`flex-1 text-left ${activeCourse === course.code ? "font-semibold" : ""}`}
+                  onClick={() => addCourse(course.code)}
+                >
+                  {course.code} - {course.name}
+                </button>
+                <button
+                  className="ml-2 text-red-500"
+                  onClick={() => removeCourse(course.code)}
+                >
+                  ✕
+                </button>
+              </div>
             ))}
             <CourseDropdown
               availableCourses={allCourses.map(c => c.code)}

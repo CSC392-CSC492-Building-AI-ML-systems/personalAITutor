@@ -28,6 +28,33 @@ export async function getHistory(courseCode: string) {
   }
 }
 
+export async function deleteHistory(courseCode: string) {
+  const token = localStorage.getItem("authToken");
+
+  if (!token) {
+    throw new Error("No auth token found");
+  }
+
+  try {
+    const response = await fetch(`http://localhost:7000/delete_message_history/${courseCode}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Failed to delete message history:", error);
+  }
+}
+
 
 export async function askQuestion(courseCode: string, question: string) {
   const token = localStorage.getItem("authToken");
