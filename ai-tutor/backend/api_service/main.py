@@ -38,7 +38,7 @@ def message_history(course_code):
         if not questions_and_answers:
             return jsonify({"message": "No message history found for this course"}), 200
 
-        message_history = [{"question": qa.question_text, "answer":qa.answer_text} for qa in questions_and_answers]
+        message_history = [{"question": qa.question_text, "answer":qa.answer_text, "sources":qa.sources} for qa in questions_and_answers]
 
         return jsonify({"message_history": message_history})
     except Exception as e:
@@ -93,17 +93,27 @@ def ask(course_code):
             return jsonify({"error": "Failed to get answer from RAG service"}), response.status_code
 
         answer_text = response.json().get("answer")
+        sources = response.json().get("sources")
+
+        source_and_score = []
+
+        for source in sources:
+            source_and_score.append({
+                "source": source["source"],
+                "score": source["score"]
+            })
 
         # Save the question and answer to the database
         question = Question(
             user_id=user_id,
             question_text=question_text,
             answer_text=answer_text,
-            course_code=course_code
+            course_code=course_code,
+            sources=source_and_score
         )
         db.session.add(question)
         db.session.commit()
 
-        return jsonify({"answer": answer_text})
+        return jsonify({"answer": answer_text, "sources": sources})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -15,6 +15,7 @@ class Question(db.Model):
     course_code = db.Column(db.String(100), db.ForeignKey('course.code'), nullable=False)
     question_text = db.Column(db.Text, nullable=False)
     answer_text = db.Column(db.Text, nullable=True)
+    sources = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     user = db.relationship('User', backref=db.backref('questions', lazy=True))
     course = db.relationship('Course', backref=db.backref('questions', lazy=True))

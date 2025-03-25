@@ -5,6 +5,7 @@ from neo4j_graphrag.retrievers import HybridRetriever
 from neo4j_graphrag.llm import OpenAILLM
 from neo4j_graphrag.generation import GraphRAG
 from neo4j_graphrag.types import LLMMessage
+from neo4j_graphrag.embeddings.base import Embedder
 from sentence_transformers import SentenceTransformer
 import os
 
@@ -21,7 +22,7 @@ driver = GraphDatabase.driver(URI, auth=AUTH)
 llm = OpenAILLM(model_name="gpt-4o", model_params={"temperature": 0})
 
 # Define a custom embedder class
-class CustomEmbedder:
+class CustomEmbedder(Embedder):
     def __init__(self, model_name):
         self.model = SentenceTransformer(model_name)
 
@@ -39,15 +40,28 @@ class CustomEmbedder:
 
 # Set up the embedder
 embedder = CustomEmbedder('sentence-transformers/all-MiniLM-L6-v2')
+
 # embedder = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 # Index names
 INDEX_NAME = "vector"
 FULLTEXT_INDEX_NAME = "keyword"
 
+fields = [
+    "fileName",
+    "text",
+    "score"
+]
+
 # Initialize the retrievers
 # vector_retriever = VectorRetriever(driver, INDEX_NAME, embedder)
-hybrid_retriever = HybridRetriever(driver, INDEX_NAME, FULLTEXT_INDEX_NAME, embedder)
+hybrid_retriever = HybridRetriever(
+    driver,
+    vector_index_name=INDEX_NAME,
+    fulltext_index_name=FULLTEXT_INDEX_NAME,
+    embedder=embedder,
+    return_properties=fields
+)
 # text2cypher_retriever = Text2CypherRetriever(driver, llm)
 
 # Initialize the GraphRAG pipeline
@@ -73,9 +87,29 @@ async def ask(request: QuestionRequest):
 
     retriever_config = {"top_k": 5}
     try:
-        response = rag.search(query_text=sanitized_question_text, message_history=message_history, retriever_config=retriever_config)
+        response = rag.search(query_text=question_text, retriever_config=retriever_config, return_context=True)
         answer_text = response.answer
-        return {"answer": answer_text}
+
+        # Extract sources and documents
+        results = response.retriever_result.items
+        output = []
+
+        for item in results:
+            content_dict = eval(item.content)
+            source = content_dict.get('fileName', 'Unknown')
+            chunk = content_dict.get('text', '')
+            score = item.metadata.get('score', None)
+
+            output.append({
+                'source': source,
+                'chunk': chunk,
+                'score': score
+            })
+
+        return {
+            "answer": answer_text,
+            "sources": output
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
