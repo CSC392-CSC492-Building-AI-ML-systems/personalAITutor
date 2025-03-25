@@ -29,11 +29,11 @@ export default function Chatbot({
   const { course, query } = use(searchParams);
 
   // State variables
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [activeCourse, setActiveCourse] = useState<string | null>(null);
+  const [selectedSidebarCourses, setSelectedSidebarCourses] = useState<string[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
   const [chatbotCourses, setChatbotCourses] = useState<string[]>([]);
   const [allCourses, setAllCourses] = useState<string[]>([]);
-  const [sidebarCourses, setSidebarCourses] = useState<string[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [fromLanding, setFromLanding] = useState(false);
   const [input, setInput] = useState("");
@@ -78,11 +78,10 @@ export default function Chatbot({
         if (!data || data.length === 0) {
           setMessages((prev) => ({
             ...prev,
-            [course]: [...(prev[course] || [])],
+            [course]: prev[course] || [],
           }));
           return;
         }
-        console.log(data.message_history);
         const messageHistory = data.message_history
           .map((qa: { question: string; answer: string }) => [
             { text: qa.question, sender: "user" },
@@ -115,15 +114,39 @@ export default function Chatbot({
     }
   }, [enrolledCourses]);
 
-  // Add a course to the sidebar and re-run the enrollment check
+  // When a sidebar course is clicked, mark it as selected and active.
+  const handleCourseClick = useCallback((courseCode: string) => {
+    setActiveCourse(courseCode);
+    setCourseError(null);
+    setSelectedSidebarCourses((prev) => {
+      if (!prev.includes(courseCode)) {
+        return [...prev, courseCode];
+      }
+      return prev;
+    });
+  }, []);
+
+  // Add a course to the sidebar (if not already added)
   const addCourse = useCallback(
     async (courseToAdd: string) => {
-      setSidebarCourses((prev) => [...prev, courseToAdd]);
-      setAllCourses((prev) => prev.filter((c) => c !== courseToAdd));
-      setSelectedCourse(courseToAdd);
+      // Add to sidebar list if not already present
+      setSelectedSidebarCourses((prev) => {
+        if (!prev.includes(courseToAdd)) {
+          return [...prev, courseToAdd];
+        }
+        return prev;
+      });
+      // Also mark it as selected
+      setSelectedSidebarCourses((prev) => {
+        if (!prev.includes(courseToAdd)) {
+          return [...prev, courseToAdd];
+        }
+        return prev;
+      });
+      setActiveCourse(courseToAdd);
       setCourseError(null);
 
-      // Set initial bot message
+      // Set initial bot message for this course
       setMessages((prev) => ({
         ...prev,
         [courseToAdd]: [
@@ -134,7 +157,7 @@ export default function Chatbot({
         ],
       }));
 
-      // Re-run enrollment check
+      // Re-run enrollment check and fetch message history if enrolled
       const updatedEnrollments = await updateEnrollmentStatus();
       if (updatedEnrollments.includes(courseToAdd)) {
         await fetchMessageHistory(courseToAdd);
@@ -143,19 +166,32 @@ export default function Chatbot({
     [fetchMessageHistory, updateEnrollmentStatus]
   );
 
-  // Send a message to the chatbot
+  // Send a message to the chatbot after updating enrollment status
   const sendMessage = useCallback(async () => {
     if (!input.trim()) return;
-    if (!selectedCourse) {
+    if (!activeCourse) {
       setCourseError("Please add a chatbot for a course before sending a message.");
+      return;
+    }
+
+    // Check for authentication token
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setMessages((prev) => ({
+        ...prev,
+        [activeCourse]: [
+          ...prev[activeCourse].slice(0, -1),
+          { text: "User not authenticated. Please log in!", sender: "bot" },
+        ],
+      }));
       return;
     }
 
     // Append user's message
     setMessages((prev) => ({
       ...prev,
-      [selectedCourse]: [
-        ...(prev[selectedCourse] || []),
+      [activeCourse]: [
+        ...(prev[activeCourse] || []),
         { text: input, sender: "user" },
       ],
     }));
@@ -165,67 +201,51 @@ export default function Chatbot({
     // Append a placeholder for the bot's response
     setMessages((prev) => ({
       ...prev,
-      [selectedCourse]: [
-        ...prev[selectedCourse],
+      [activeCourse]: [
+        ...prev[activeCourse],
         { text: "...", sender: "bot" },
       ],
     }));
 
     setInput("");
 
-    try {
-      // Check for authentication token
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        setMessages((prev) => ({
-          ...prev,
-          [selectedCourse]: [
-            ...prev[selectedCourse].slice(0, -1),
-            { text: "User not authenticated. Please log in!", sender: "bot" },
-          ],
-        }));
-        return;
-      }
-
     // Update enrollment status before sending the message
     const updatedEnrollments = await updateEnrollmentStatus();
-    if (!updatedEnrollments.includes(selectedCourse)) {
+    if (!updatedEnrollments.includes(activeCourse)) {
       setMessages((prev) => ({
         ...prev,
-        [selectedCourse]: [
-          ...prev[selectedCourse].slice(0, -1),
+        [activeCourse]: [
+          ...prev[activeCourse].slice(0, -1),
           { text: "Not enrolled in this course!", sender: "bot" },
         ],
       }));
       return;
     }
 
-      // Check if the course has a chatbot
-      if (!chatbotCourses.includes(selectedCourse)) {
-        setMessages((prev) => ({
-          ...prev,
-          [selectedCourse]: [
-            ...prev[selectedCourse].slice(0, -1),
-            { text: "This course does not have a chatbot yet!", sender: "bot" },
-          ],
-        }));
-        return;
-      }
+    // Check if the course has a chatbot
+    if (!chatbotCourses.includes(activeCourse)) {
+      setMessages((prev) => ({
+        ...prev,
+        [activeCourse]: [
+          ...prev[activeCourse].slice(0, -1),
+          { text: "This course does not have a chatbot yet!", sender: "bot" },
+        ],
+      }));
+      return;
+    }
 
+    try {
       // Ask the question and update the conversation
-      const response = await askQuestion(selectedCourse, input);
+      const response = await askQuestion(activeCourse, input);
       if (response && response.answer) {
         const parsedAnswer = await marked(response.answer);
         setMessages((prev) => ({
           ...prev,
-          [selectedCourse]: [
-            ...prev[selectedCourse].slice(0, -1),
+          [activeCourse]: [
+            ...prev[activeCourse].slice(0, -1),
             { text: parsedAnswer, sender: "bot" },
           ],
         }));
-        if (response.sources) {
-          console.log("Sources:", response.sources);
-        }
       } else {
         throw new Error("Invalid response format");
       }
@@ -233,16 +253,16 @@ export default function Chatbot({
       if (error.message === "User not authenticated") {
         setMessages((prev) => ({
           ...prev,
-          [selectedCourse]: [
-            ...prev[selectedCourse].slice(0, -1),
+          [activeCourse]: [
+            ...prev[activeCourse].slice(0, -1),
             { text: "User not authenticated. Please log in!", sender: "bot" },
           ],
         }));
       } else if (error.message === "Too many requests") {
         setMessages((prev) => ({
           ...prev,
-          [selectedCourse]: [
-            ...prev[selectedCourse].slice(0, -1),
+          [activeCourse]: [
+            ...prev[activeCourse].slice(0, -1),
             { text: "Too many requests. Please try again later!", sender: "bot" },
           ],
         }));
@@ -250,14 +270,14 @@ export default function Chatbot({
         console.error("Error asking question:", error);
         setMessages((prev) => ({
           ...prev,
-          [selectedCourse]: [
-            ...prev[selectedCourse].slice(0, -1),
+          [activeCourse]: [
+            ...prev[activeCourse].slice(0, -1),
             { text: "Error generating response. Please try again!", sender: "bot" },
           ],
         }));
       }
     }
-  }, [input, selectedCourse, chatbotCourses, scrollToBottom, updateEnrollmentStatus]);
+  }, [input, activeCourse, chatbotCourses, scrollToBottom, updateEnrollmentStatus]);
 
   // Fetch initial courses and, if search params exist, add the course with query pre-filled
   useEffect(() => {
@@ -275,7 +295,9 @@ export default function Chatbot({
   // If coming from landing with a query, send the landing message once
   useEffect(() => {
     if (fromLanding) {
-      sendMessage().catch((error) => console.error("Failed to send landing message", error));
+      sendMessage().catch((error) =>
+        console.error("Failed to send landing message", error)
+      );
     }
   }, [fromLanding, sendMessage]);
 
@@ -289,27 +311,37 @@ export default function Chatbot({
             <span className="relative">CHATBOT</span>
           </h1>
           <div className="flex flex-col space-y-2 mt-6">
-            {sidebarCourses.map((course) => (
+            {selectedSidebarCourses.map((courseCode) => (
               <button
-                key={course}
-                className={`p-3 rounded-md text-center text-2xl ${selectedCourse === course ? "font-semibold" : ""}`}
-                style={selectedCourse === course ? { backgroundColor: "#FFF0D2" } : { backgroundColor: "#FAFAEB" }}
-                onClick={() => {
-                  setSelectedCourse(course);
-                  setCourseError(null);
-                }}
+                key={courseCode}
+                className={`p-3 rounded-md text-center text-2xl ${
+                  activeCourse === courseCode ? "font-semibold" : ""
+                }`}
+                style={
+                  activeCourse === courseCode
+                    ? { backgroundColor: "#FFF0D2" }
+                    : { backgroundColor: "#FAFAEB" }
+                }
+                onClick={() => handleCourseClick(courseCode)}
               >
-                {course}
+                {courseCode}
               </button>
             ))}
-            <CourseDropdown availableCourses={allCourses} sidebarCourses={sidebarCourses} addCourse={addCourse} />
+            <CourseDropdown
+              availableCourses={allCourses}
+              sidebarCourses={selectedSidebarCourses}
+              addCourse={addCourse}
+            />
           </div>
         </aside>
 
         {/* Chat Area */}
         <main className="flex-1 flex flex-col h-full">
           <div ref={chatRef} className="flex-1 p-4 overflow-y-auto min-h-0">
-            {(selectedCourse && messages[selectedCourse] ? messages[selectedCourse] : []).map((msg, index) => (
+            {(activeCourse && messages[activeCourse]
+              ? messages[activeCourse]
+              : []
+            ).map((msg, index) => (
               <div
                 key={index}
                 className={`mb-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
