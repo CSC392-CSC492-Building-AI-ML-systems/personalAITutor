@@ -93,6 +93,7 @@ def ask(course_code):
             return jsonify({"error": "Failed to get answer from RAG service"}), response.status_code
 
         answer_text = response.json().get("answer")
+        sources = response.json().get("sources")
 
         # Save the question and answer to the database
         question = Question(
@@ -104,6 +105,6 @@ def ask(course_code):
         db.session.add(question)
         db.session.commit()
 
-        return jsonify({"answer": answer_text})
+        return jsonify({"answer": answer_text, "sources": sources})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
