@@ -28,10 +28,10 @@ export default function Chatbot({
   const { course, query } = use(searchParams);
 
   const [activeCourse, setActiveCourse] = useState<string | null>(null);
-  const [selectedSidebarCourses, setSelectedSidebarCourses] = useState<string[]>([]);
+  const [selectedSidebarCourses, setSelectedSidebarCourses] = useState<Course[]>([]);
   const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
   const [chatbotCourses, setChatbotCourses] = useState<string[]>([]);
-  const [allCourses, setAllCourses] = useState<string[]>([]);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [fromLanding, setFromLanding] = useState(false);
   const [input, setInput] = useState("");
@@ -49,9 +49,7 @@ export default function Chatbot({
     try {
       const allCoursesResponse = await getAllCourses();
       const userCoursesResponse = await getUserCourses();
-      const allCourseCodes = allCoursesResponse.courses.map(
-        (course: Course) => course.code
-      );
+      const allCourseCodes = allCoursesResponse.courses;
       const enrolledCourseCodes = userCoursesResponse.courses.map(
         (course: Course) => course.code
       );
@@ -65,8 +63,9 @@ export default function Chatbot({
         const data = await getHistory(courseCode);
         if (data && data.length !== 0) {
           setSelectedSidebarCourses((prev) => {
-            if (!prev.includes(courseCode)) {
-              return [...prev, courseCode];
+            const course = allCourseCodes.find(c => c.code === courseCode);
+            if (course && !prev.some(c => c.code === courseCode)) {
+              return [...prev, course];
             }
             return prev;
           });
@@ -100,8 +99,9 @@ export default function Chatbot({
           [course]: [...(prev[course] || []), ...messageHistory],
         }));
         setSelectedSidebarCourses((prev) => {
-          if (!prev.includes(course)) {
-            return [...prev, course];
+          const courseObj = allCourses.find(c => c.code === course);
+          if (courseObj && !prev.some(c => c.code === course)) {
+            return [...prev, courseObj];
           }
           return prev;
         });
@@ -110,7 +110,7 @@ export default function Chatbot({
         console.error("Failed to fetch message history:", error);
       }
     },
-    [scrollToBottom]
+    [scrollToBottom, allCourses]
   );
 
   const updateEnrollmentStatus = useCallback(async () => {
@@ -128,9 +128,12 @@ export default function Chatbot({
   }, [enrolledCourses]);
 
   const addCourse = useCallback(async (courseCode: string) => {
+    const course = allCourses.find(c => c.code === courseCode);
+    if (!course) return;
+
     setSelectedSidebarCourses((prev) => {
-      if (!prev.includes(courseCode)) {
-        return [...prev, courseCode];
+      if (!prev.some(c => c.code === courseCode)) {
+        return [...prev, course];
       }
       return prev;
     });
@@ -152,7 +155,7 @@ export default function Chatbot({
       await fetchMessageHistory(courseCode);
     }
     scrollToBottom();
-  }, [fetchMessageHistory, scrollToBottom, updateEnrollmentStatus]);
+  }, [fetchMessageHistory, scrollToBottom, updateEnrollmentStatus, allCourses]);
 
   const sendMessage = useCallback(async () => {
     if (!input.trim()) return;
@@ -289,25 +292,25 @@ export default function Chatbot({
             <span className="relative">CHATBOT</span>
           </h1>
           <div className="flex flex-col space-y-2 mt-6">
-            {selectedSidebarCourses.map((courseCode) => (
+            {selectedSidebarCourses.map((course) => (
               <button
-                key={courseCode}
+                key={course.code}
                 className={`p-3 rounded-md text-center text-2xl ${
-                  activeCourse === courseCode ? "font-semibold" : ""
+                  activeCourse === course.code ? "font-semibold" : ""
                 }`}
                 style={
-                  activeCourse === courseCode
+                  activeCourse === course.code
                     ? { backgroundColor: "#FFF0D2" }
                     : { backgroundColor: "#FAFAEB" }
                 }
-                onClick={() => addCourse(courseCode)}
+                onClick={() => addCourse(course.code)}
               >
-                {courseCode}
+                {course.code} - {course.name}
               </button>
             ))}
             <CourseDropdown
-              availableCourses={allCourses}
-              sidebarCourses={selectedSidebarCourses}
+              availableCourses={allCourses.map(c => c.code)}
+              sidebarCourses={selectedSidebarCourses.map(c => c.code)}
               addCourse={addCourse}
             />
           </div>
