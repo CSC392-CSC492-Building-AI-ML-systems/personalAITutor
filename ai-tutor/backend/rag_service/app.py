@@ -103,7 +103,7 @@ async def ask(request: QuestionRequest):
             output.append({
                 'source': source,
                 'chunk': chunk,
-                'similarity': score
+                'score': score
             })
 
         return {
