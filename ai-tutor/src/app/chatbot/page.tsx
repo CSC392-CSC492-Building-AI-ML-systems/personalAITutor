@@ -70,7 +70,7 @@ export default function Chatbot({
     }
   }, []);
 
-  // Fetch message history for a given course
+  // Fetch message history for a given course, then scroll to bottom
   const fetchMessageHistory = useCallback(
     async (course: string) => {
       try {
@@ -80,6 +80,7 @@ export default function Chatbot({
             ...prev,
             [course]: prev[course] || [],
           }));
+          scrollToBottom();
           return;
         }
         const messageHistory = data.message_history
@@ -92,11 +93,12 @@ export default function Chatbot({
           ...prev,
           [course]: [...(prev[course] || []), ...messageHistory],
         }));
+        scrollToBottom();
       } catch (error) {
         console.error("Failed to fetch message history:", error);
       }
     },
-    []
+    [scrollToBottom]
   );
 
   // Re-check enrollment status by calling getUserCourses
@@ -120,23 +122,17 @@ export default function Chatbot({
     setCourseError(null);
     setSelectedSidebarCourses((prev) => {
       if (!prev.includes(courseCode)) {
+        scrollToBottom();
         return [...prev, courseCode];
       }
+      scrollToBottom();
       return prev;
     });
-  }, []);
+  }, [scrollToBottom]);
 
   // Add a course to the sidebar (if not already added)
   const addCourse = useCallback(
     async (courseToAdd: string) => {
-      // Add to sidebar list if not already present
-      setSelectedSidebarCourses((prev) => {
-        if (!prev.includes(courseToAdd)) {
-          return [...prev, courseToAdd];
-        }
-        return prev;
-      });
-      // Also mark it as selected
       setSelectedSidebarCourses((prev) => {
         if (!prev.includes(courseToAdd)) {
           return [...prev, courseToAdd];
@@ -187,6 +183,19 @@ export default function Chatbot({
       return;
     }
 
+    // Update enrollment status before sending the message
+    const updatedEnrollments = await updateEnrollmentStatus();
+    if (!updatedEnrollments.includes(activeCourse)) {
+      setMessages((prev) => ({
+        ...prev,
+        [activeCourse]: [
+          ...prev[activeCourse].slice(0, -1),
+          { text: "Not enrolled in this course!", sender: "bot" },
+        ],
+      }));
+      return;
+    }
+
     // Append user's message
     setMessages((prev) => ({
       ...prev,
@@ -209,19 +218,6 @@ export default function Chatbot({
 
     setInput("");
 
-    // Update enrollment status before sending the message
-    const updatedEnrollments = await updateEnrollmentStatus();
-    if (!updatedEnrollments.includes(activeCourse)) {
-      setMessages((prev) => ({
-        ...prev,
-        [activeCourse]: [
-          ...prev[activeCourse].slice(0, -1),
-          { text: "Not enrolled in this course!", sender: "bot" },
-        ],
-      }));
-      return;
-    }
-
     // Check if the course has a chatbot
     if (!chatbotCourses.includes(activeCourse)) {
       setMessages((prev) => ({
@@ -235,7 +231,7 @@ export default function Chatbot({
     }
 
     try {
-      // Ask the question and update the conversation
+      // Ask and update the conversation
       const response = await askQuestion(activeCourse, input);
       if (response && response.answer) {
         const parsedAnswer = await marked(response.answer);
