@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, use } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, useRef, use } from "react";
 import CourseDropdown from "../components/CourseDropdown";
 import { useAutoScroll } from "../hooks/autoscroll";
 import { getHistory, deleteHistory, askQuestion } from "../utils/questionUtils";
@@ -26,6 +27,7 @@ export default function Chatbot({
   searchParams: Promise<{ course: string; query: string }>;
 }) {
   const { course, query } = use(searchParams);
+  const router = useRouter();
 
   const [activeCourse, setActiveCourse] = useState<string | null>(null);
   const [selectedSidebarCourses, setSelectedSidebarCourses] = useState<Course[]>([]);
@@ -33,10 +35,12 @@ export default function Chatbot({
   const [chatbotCourses, setChatbotCourses] = useState<string[]>([]);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
-  const [fromLanding, setFromLanding] = useState(false);
   const [input, setInput] = useState("");
   const [courseError, setCourseError] = useState<string | null>(null);
   const { chatRef, scrollToBottom } = useAutoScroll();
+
+  // Use a ref as a lock so that the landing query is executed only once
+  const queryExecutedRef = useRef(false);
 
   useEffect(() => {
     if (courseError) {
@@ -63,7 +67,7 @@ export default function Chatbot({
         const data = await getHistory(courseCode);
         if (data && data.length !== 0) {
           setSelectedSidebarCourses((prev) => {
-            const course = allCourseCodes.find((c: { code: any; }) => c.code === courseCode);
+            const course = allCourseCodes.find((c: { code }) => c.code === courseCode);
             if (course && !prev.some(c => c.code === courseCode)) {
               return [...prev, course];
             }
@@ -80,20 +84,29 @@ export default function Chatbot({
     async (course: string) => {
       try {
         const data = await getHistory(course);
+        if (!data || data.length === 0) {
+          setMessages((prev) => ({
+            ...prev,
+            [course]: prev[course] || [],
+          }));
+          scrollToBottom();
+          return;
+        }
+
         const messageHistory = data.message_history
-        .map((qa: { question: string; answer: string; sources?: any[] }) => {
+        .map((qa: { question: string; answer: string; sources? }) => {
           const parsedAnswer = marked(qa.answer);
 
           const extractedSources = (qa.sources ?? [])
-            .map((src: any) => src.source)
-            .filter((s: string | null) => s);
+            .map(src => ({ source: src.source, score: src.score.toFixed(2) }))
+            .filter((s: { source: string | null }) => s.source);
 
           const sourceListHtml = extractedSources.length > 0
             ? `
               <div style="margin-top: 1rem;">
                 <strong>Sources:</strong>
                 <div style="margin-top: 0.5rem;">
-                  ${extractedSources.map((s: string) => `<div style="margin: 2px 0;">• ${s}</div>`).join("")}
+                  ${extractedSources.map((src: { source: string, score: number }) => `<div style="margin: 2px 0;">• ${src.source} (Similarity score: ${src.score})</div>`).join("")}
                 </div>
               </div>
             `
@@ -107,7 +120,7 @@ export default function Chatbot({
         .flat();
         setMessages((prev) => ({
           ...prev,
-          [course]: [...(prev[course] || []), ...messageHistory],
+          [course]: (prev[course] || []).concat(messageHistory),
         }));
         setSelectedSidebarCourses((prev) => {
           const courseObj = allCourses.find(c => c.code === course);
@@ -250,15 +263,15 @@ export default function Chatbot({
         const parsedAnswer = await marked(response.answer);
         const sources = response.sources ?? [];
         const validSources = sources
-          .map((src: any) => src.source)
-          .filter((source: string | undefined) => source);
+          .map(src => ({ source: src.source, score: src.score.toFixed(2), chunk: src.chunk }))
+          .filter((s: { source: string | null }) => s.source);
 
         const sourceListHtml = validSources.length > 0
           ? `
             <div style="margin-top: 1rem;">
               <strong>Sources:</strong>
               <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
-                ${validSources.map((src: string) => `<li>.${src}</li>`).join("")}
+                ${validSources.map((src: { source: string, score: number, chunk: string }) => `<div style="margin: 2px 0;">• ${src.source} (Similarity score: ${src.score}) <br> Text chunk: ${src.chunk}</div>`).join("")}
               </ul>
             </div>
           `
@@ -310,23 +323,23 @@ export default function Chatbot({
 
   useEffect(() => {
     const fetchData = async () => {
-      await fetchCourses();
-      if (course && query) {
-        await addCourse(course);
-        setInput(query);
-        setFromLanding(true);
+      try {
+        await fetchCourses();
+        if (course && query && !queryExecutedRef.current) {
+          if (allCourses.length === 0) return;
+          await addCourse(course);
+          setInput(query);
+          setActiveCourse(course);
+          router.replace("/chatbot");
+          queryExecutedRef.current = true;
+        }
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
       }
     };
     fetchData().catch((error) => console.error("Failed to fetch data:", error));
-  }, [course, query, fetchCourses, addCourse]);
+  }, [course, query, fetchCourses, addCourse, allCourses, router]);
 
-  useEffect(() => {
-    if (fromLanding) {
-      sendMessage().catch((error) =>
-        console.error("Failed to send landing message", error)
-      );
-    }
-  }, [fromLanding, sendMessage]);
 
   return (
     <div className="h-full flex flex-col bg-white">
