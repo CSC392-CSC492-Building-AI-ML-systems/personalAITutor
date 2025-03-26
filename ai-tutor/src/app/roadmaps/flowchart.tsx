@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import ReactFlow, { MiniMap, Controls, Background } from "react-flow-renderer";
-import { getFlowchart } from "@/utils/courseUtils";
+import ReactFlow, { MiniMap, Controls, Background, Node, Edge } from "react-flow-renderer";
+import { getFlowchart } from "../utils/courseUtils";
 
 // -------------------------------------------------------------------
 // Color Scheme & Basic Theme Settings
@@ -72,17 +72,25 @@ const getDomain = (url) => {
 // -------------------------------------------------------------------
 // Function to process flowchart data
 // -------------------------------------------------------------------
-const processFlowchartData = (flowchartData) => {
-  // Sort weeks by numeric value (extracting the first number)
+type Topic = {
+  topic: string;
+  external: string[];
+  internal: { path: string }[];
+};
+
+type FlowchartData = {
+  [weekName: string]: Topic[];
+};
+
+const processFlowchartData = (flowchartData: FlowchartData) => {
   const sortedWeeksEntries = Object.entries(flowchartData).sort(
     ([weekA], [weekB]) => {
-      const numA = parseInt(weekA.match(/\d+/)[0]);
-      const numB = parseInt(weekB.match(/\d+/)[0]);
+      const numA = weekA.match(/\d+/)?.[0] ? parseInt(weekA.match(/\d+/)?.[0] ?? '0') : 0;
+      const numB = weekB.match(/\d+/)?.[0] ? parseInt(weekB.match(/\d+/)?.[0] ?? '0') : 0;
       return numA - numB;
     }
   );
 
-  // Transform sorted weeks into our weeks structure
   const weeks = sortedWeeksEntries.map(([weekName, topics]) => {
     const groupId = weekName.replace(/\s+/g, "");
     const topicsTransformed = topics.map((topicData, i) => ({
@@ -175,7 +183,15 @@ const processFlowchartData = (flowchartData) => {
   );
 
   // 4. Optionally connect week nodes sequentially
-  const groupSequentialEdges = [];
+  type Edge = {
+    id: string;
+    source: string;
+    target: string;
+    animated: boolean;
+    style: { stroke: string; strokeWidth: number };
+  };
+
+  const groupSequentialEdges: Edge[] = [];
   for (let i = 0; i < weeks.length - 1; i++) {
     groupSequentialEdges.push({
       id: `group-${weeks[i].id}-to-${weeks[i + 1].id}`,
@@ -230,6 +246,10 @@ const TopicDetailInfo = ({ topicId, onClose, topicLinks }) => {
         <ul>
           {topicData.external.map((url) => {
             const domain = getDomain(url);
+            if (!domain) {
+              console.error("Domain is undefined for URL:", url);
+              return null;
+            }
             const title = domainMapping[domain] || domain;
             domainCounts[domain] = (domainCounts[domain] || 0) + 1;
             return (
@@ -284,8 +304,8 @@ const TopicDetailInfo = ({ topicId, onClose, topicLinks }) => {
 const Flowchart = ({ courseCode }) => {
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [flowchartData, setFlowchartData] = useState(null);
-  const [flowNodes, setFlowNodes] = useState([]);
-  const [flowEdges, setFlowEdges] = useState([]);
+  const [flowNodes, setFlowNodes] = useState<Node[]>([]);
+  const [flowEdges, setFlowEdges] = useState<Edge[]>([]);
   const [topicLinks, setTopicLinks] = useState({});
 
   useEffect(() => {
