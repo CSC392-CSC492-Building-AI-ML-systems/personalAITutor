@@ -63,7 +63,7 @@ export default function Chatbot({
         const data = await getHistory(courseCode);
         if (data && data.length !== 0) {
           setSelectedSidebarCourses((prev) => {
-            const course = allCourseCodes.find(c => c.code === courseCode);
+            const course = allCourseCodes.find((c: { code: any; }) => c.code === courseCode);
             if (course && !prev.some(c => c.code === courseCode)) {
               return [...prev, course];
             }
@@ -80,20 +80,31 @@ export default function Chatbot({
     async (course: string) => {
       try {
         const data = await getHistory(course);
-        if (!data || data.length === 0) {
-          setMessages((prev) => ({
-            ...prev,
-            [course]: prev[course] || [],
-          }));
-          scrollToBottom();
-          return;
-        }
         const messageHistory = data.message_history
-          .map((qa: { question: string; answer: string }) => [
+        .map((qa: { question: string; answer: string; sources?: any[] }) => {
+          const parsedAnswer = marked(qa.answer);
+
+          const extractedSources = (qa.sources ?? [])
+            .map((src: any) => src.source)
+            .filter((s: string | null) => s);
+
+          const sourceListHtml = extractedSources.length > 0
+            ? `
+              <div style="margin-top: 1rem;">
+                <strong>Sources:</strong>
+                <div style="margin-top: 0.5rem;">
+                  ${extractedSources.map((s: string) => `<div style="margin: 2px 0;">• ${s}</div>`).join("")}
+                </div>
+              </div>
+            `
+            : "";
+
+          return [
             { text: qa.question, sender: "user" },
-            { text: marked(qa.answer), sender: "bot" },
-          ])
-          .flat();
+            { text: parsedAnswer + sourceListHtml, sender: "bot" },
+          ];
+        })
+        .flat();
         setMessages((prev) => ({
           ...prev,
           [course]: [...(prev[course] || []), ...messageHistory],
@@ -237,11 +248,27 @@ export default function Chatbot({
       const response = await askQuestion(activeCourse, input);
       if (response && response.answer) {
         const parsedAnswer = await marked(response.answer);
+        const sources = response.sources ?? [];
+        const validSources = sources
+          .map((src: any) => src.source)
+          .filter((source: string | undefined) => source);
+
+        const sourceListHtml = validSources.length > 0
+          ? `
+            <div style="margin-top: 1rem;">
+              <strong>Sources:</strong>
+              <ul style="margin-top: 0.5rem; padding-left: 1.25rem;">
+                ${validSources.map((src: string) => `<li>.${src}</li>`).join("")}
+              </ul>
+            </div>
+          `
+          : "";
+
         setMessages((prev) => ({
           ...prev,
           [activeCourse]: [
             ...prev[activeCourse].slice(0, -1),
-            { text: parsedAnswer, sender: "bot" },
+            { text: parsedAnswer + sourceListHtml, sender: "bot" },
           ],
         }));
       } else {
