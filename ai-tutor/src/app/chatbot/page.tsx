@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, use } from "react";
 import CourseDropdown from "../components/CourseDropdown";
 import { useAutoScroll } from "../hooks/autoscroll";
-import { getHistory, deleteHistory, askQuestion } from "@/utils/questionUtils";
-import { getAllCourses, getUserCourses } from "@/utils/courseUtils";
+import { getHistory, deleteHistory, askQuestion } from "../utils/questionUtils";
+import { getAllCourses, getUserCourses } from "../utils/courseUtils";
 import { marked } from "marked";
 
 interface Message {
@@ -247,7 +247,8 @@ export default function Chatbot({
       } else {
         throw new Error("Invalid response format");
       }
-    } catch (error: any) {
+    } catch (error) {
+    if (error instanceof Error) {
       if (error.message === "User not authenticated") {
         setMessages((prev) => ({
           ...prev,
@@ -274,7 +275,10 @@ export default function Chatbot({
           ],
         }));
       }
+    } else {
+      console.error("Unknown error:", error);
     }
+  }
   }, [input, activeCourse, chatbotCourses, scrollToBottom, updateEnrollmentStatus]);
 
   useEffect(() => {
