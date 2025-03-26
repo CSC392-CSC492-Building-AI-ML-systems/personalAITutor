@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import LandingDropdown from "./components/LandingDropdown";
 import { useState, useEffect } from "react";
-import { getAllCourses } from "@/utils/courseUtils";
+import { getAllCourses } from "./utils/courseUtils";
 
 interface Course {
   name: string;
