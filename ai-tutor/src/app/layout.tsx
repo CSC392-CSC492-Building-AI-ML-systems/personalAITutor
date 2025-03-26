@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import "./globals.css";
 import ProfileIcon from "./components/profileIcon";
-import { logout } from "@/utils/authUtils"; 
+// import { logout } from "./utils/authUtils";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -31,13 +31,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }, []);
 
   // Handle Logout
-  const handleLogout = async () => {
-    await logout();
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userEmail");
-    setUser({ name: "", email: "", isLoggedIn: false });
-  };
+  // const handleLogout = async () => {
+  //   await logout();
+  //   localStorage.removeItem("authToken");
+  //   localStorage.removeItem("userName");
+  //   localStorage.removeItem("userEmail");
+  //   setUser({ name: "", email: "", isLoggedIn: false });
+  // };
 
   return (
     <html lang="en">
@@ -47,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Left Section - Logo and Navigation */}
           <div className="flex items-center">
             <Link href="/">
-              <Image className="m-3" src="logo.svg" alt="advisory logo" width={80} height={80} />
+              <Image className="m-3" src="/logo.svg" alt="advisory logo" width={80} height={80} />
             </Link>
             <Link href="/roadmaps" className="relative ml-5">
               <div className={pathname.startsWith('/roadmaps') ? 'absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 -mx-2 bg-[#FFF0D2]' : ''}></div>

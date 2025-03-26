@@ -44,6 +44,20 @@ def message_history(course_code):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@main.route('/delete_message_history/<course_code>', methods=['DELETE'])
+@jwt_required()
+def delete_message_history(course_code):
+    user_id = get_jwt_identity()
+
+    try:
+        # Delete all questions for the authenticated user and specified course
+        Question.query.filter_by(user_id=user_id, course_code=course_code).delete()
+        db.session.commit()
+        return jsonify({"message": "Message history deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 # Custom rate limit exceeded handler
 @limiter.request_filter
 def rate_limit_exceeded():

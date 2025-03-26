@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from 'next/link';
-import { getAllCourses } from "@/utils/courseUtils";
+import { getAllCourses } from "../utils/courseUtils";
 
 interface Course {
   name: string;
