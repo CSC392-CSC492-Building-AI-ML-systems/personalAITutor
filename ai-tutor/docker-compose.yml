@@ -19,14 +19,14 @@ services:
 #    networks:
 #      - internal_network
 
-  backend:
+  backend_service:
     build: ./backend
     ports:
       - "7000:7000"
 #    volumes:
 #      - ./backend:/app
     environment:
-      - FLASK_ENV=development
+      - FLASK_ENV=production
       - DATABASE_URI=sqlite:///database.db
       - JWT_SECRET_KEY=secret
       - VALID_API_KEY=key
@@ -38,6 +38,16 @@ services:
       # - rag_service_csc311
     networks:
       - internal_network
+
+  frontend_service:
+    build: ./src
+    environment:
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend_service
+    command: npm run start
 
 networks:
   internal_network:
