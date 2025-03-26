@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { register, login, logout } from "@/utils/authUtils"; 
-import {enrollCourse, dropCourse, getAllCourses, getUserCourses } from '@/utils/courseUtils';
+import { register, login, logout } from "../utils/authUtils";
+import {enrollCourse, dropCourse, getAllCourses, getUserCourses } from '../utils/courseUtils';
 import Course from "./course";
 
 type User = {
@@ -17,7 +17,7 @@ type CourseType = {
   code: string;
 };
 
-export default function Profile({ user, setUser, onClose }: { user: User; setUser: any; onClose: () => void }) {
+export default function Profile({ user, setUser, onClose }: { user: User; setUser; onClose: () => void }) {
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

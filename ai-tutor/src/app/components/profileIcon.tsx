@@ -10,7 +10,7 @@ type User = {
   isLoggedIn: boolean;
 };
 
-export default function ProfileIcon({ user, setUser }: { user: User; setUser: any }) {
+export default function ProfileIcon({ user, setUser }: { user: User; setUser }) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Get initials from name
