@@ -23,7 +23,7 @@ export default function Profile({
   onClose,
 }: {
   user: User;
-  setUser: any;
+  setUser;
   onClose: () => void;
 }) {
   const [isSigningUp, setIsSigningUp] = useState(false);
