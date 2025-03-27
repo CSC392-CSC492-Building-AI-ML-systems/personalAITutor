@@ -13,7 +13,7 @@ const colors = {
   border: "#d3c7a0", // Darker border color
   text: "#2c3e50", // Dark text color
   line: "#999", // Default line color
-  weekBox: "#f0dc9e", // Big branch (group) node color
+  weekBox: "#E9F3DA", // Big branch (group) node color
 };
 
 // -------------------------------------------------------------------
@@ -128,7 +128,7 @@ const processFlowchartData = (flowchartData: FlowchartData) => {
 
   // Week node style
   const parentNodeStyle = {
-    border: `2px solid ${colors.border}`,
+    border: 'none',
     backgroundColor: colors.weekBox,
     padding: 20,
     borderRadius: 10,
@@ -142,6 +142,7 @@ const processFlowchartData = (flowchartData: FlowchartData) => {
     backgroundColor: colors.boxBackground,
     padding: 14,
     borderRadius: 6,
+    width: 180,
     fontSize: "14px",
   };
 
@@ -165,9 +166,10 @@ const processFlowchartData = (flowchartData: FlowchartData) => {
         id: topic.id,
         data: { label: topic.name },
         position: {
-          x: baseX + topicIndex * 175 - (numberOfTopics - 1) * 100 + ~~(topicIndex / ~~((numberOfTopics + 1) / 2)) * 100 - (numberOfTopics % 2) * 100,
+          x: baseX + topicIndex * 220 - (numberOfTopics - 1) * 100,
           y: baseY + 120
         },
+        width: 200,
         style: topicNodeStyle
       };
     });
@@ -240,21 +242,17 @@ const TopicDetailInfo = ({ topicId, onClose, topicLinks }) => {
       <button
         onClick={onClose}
         style={{
-          padding: "8px 12px",
           cursor: "pointer",
           color: "black", // "Close Details" text in black
         }}
       >
-        Close Details
+        Close
       </button>
-      <h2 style={{ color: colors.text, marginBottom: "10px" }}>
-        {topicData.name}
+      <h2 style={{ fontWeight: 700, color: colors.text, marginBottom: "10px" }}>
+      {topicData.parent} - {topicData.name}
       </h2>
-      <h4 style={{ color: colors.text, marginBottom: "10px" }}>
-        Parent Week: {topicData.parent}
-      </h4>
       <div style={{ marginBottom: "10px" }}>
-        <h3 style={{ color: colors.text }}>External Resources:</h3>
+        <h3 style={{ fontWeight: 700, color: colors.text }}>External Resources:</h3>
         <ul>
           {topicData.external.map((url) => {
             const domain = getDomain(url);
@@ -280,7 +278,7 @@ const TopicDetailInfo = ({ topicId, onClose, topicLinks }) => {
         </ul>
       </div>
       <div style={{ marginBottom: "10px" }}>
-        <h3 style={{ color: colors.text }}>Internal Resources:</h3>
+        <h3 style={{ fontWeight: 700, color: colors.text }}>Internal Resources:</h3>
         <ul>
           {topicData.internal.map((item, index) => (
             <li key={index} style={{ color: colors.text }}>
@@ -339,7 +337,7 @@ const Flowchart = ({ courseCode }) => {
         const data = await getFlowchart(courseCode);
         const processedData = processFlowchartData(data);
         // setFlowchartData(data);
-        setFlowNodes(processedData.flowNodes);
+        setFlowNodes(processedData.flowNodes as Node[]);
         setFlowEdges(processedData.flowEdges);
         setTopicLinks(processedData.topicLinks);
 
@@ -352,7 +350,7 @@ const Flowchart = ({ courseCode }) => {
             maxY = Math.max(maxY, y);
           });
   
-          const padding = 200; // Extra space around flowNodes
+          const padding = 100; // Extra space around flowNodes
       
           setTranslateExt([
             [-4000, minY - padding],
