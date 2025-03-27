@@ -36,7 +36,6 @@ export default function Roadmaps() {
         <div className="relative text-7xl">ROADMAPS</div>
       </div>
       <div className="w-fit max-w-5xl grid h-100 grid-cols-4 gap-4 pt-10">
-
         {courses.map((c) => {
           return (
             <Link href={`/roadmaps/${c.toLowerCase()}`} key={c}>

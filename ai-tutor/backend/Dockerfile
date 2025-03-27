@@ -25,7 +25,7 @@ ENV FLASK_APP=api_service/app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 
 # Expose the port the app runs on
-EXPOSE 7000
+EXPOSE 7001
 
 # Use the shell script as the entry point
 ENTRYPOINT ["./entrypoint.sh"]
