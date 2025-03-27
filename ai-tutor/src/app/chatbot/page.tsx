@@ -11,6 +11,7 @@ import { marked } from "marked";
 interface Message {
   text: string;
   sender: "user" | "bot";
+  isExpanded?: boolean;
 }
 
 interface Course {
@@ -375,7 +376,7 @@ export default function Chatbot({
         </aside>
         <main className="flex-1 flex flex-col h-full">
           <div ref={chatRef} className="flex-1 p-4 overflow-y-auto min-h-0">
-            {(activeCourse && messages[activeCourse]
+          {(activeCourse && messages[activeCourse]
               ? messages[activeCourse]
               : []
             ).map((msg, index) => (
@@ -383,8 +384,38 @@ export default function Chatbot({
                 key={index}
                 className={`mb-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
               >
-                <div className={`p-3 rounded-lg max-w-3xl ${msg.sender === "user" ? "bg-yellow-100" : "bg-[#E9F3DA]"}`}>
-                  <div dangerouslySetInnerHTML={{ __html: msg.text }} />
+                <div
+                  className={`p-3 rounded-lg max-w-3xl ${
+                    msg.sender === "user" ? "bg-yellow-100" : "bg-[#E9F3DA]"
+                  }`}
+                >
+                  <div dangerouslySetInnerHTML={{ __html: msg.text.split("Sources:")[0] }} />
+                  {msg.sender === "bot" && msg.text.includes("Sources:") && (
+                    <div>
+                      <button
+                        className="text-blue-500 underline mt-2"
+                        onClick={() => {
+                          if (!activeCourse) return;
+                          setMessages((prev) => ({
+                            ...prev,
+                            [activeCourse]: prev[activeCourse].map((m, i) =>
+                              i === index ? { ...m, isExpanded: !m.isExpanded } : m
+                            ),
+                          }));
+                        }}
+                      >
+                        {msg.isExpanded ? "Hide Sources" : "Show Sources"}
+                      </button>
+                      {msg.isExpanded && (
+                        <div
+                          className="mt-2"
+                          dangerouslySetInnerHTML={{
+                            __html: msg.text.split("Sources:")[1], // Extract the sources section
+                          }}
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
