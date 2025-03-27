@@ -22,7 +22,7 @@ services:
   backend_service:
     build: ./backend
     ports:
-      - "7000:7000"
+      - "7001:7001"
 #    volumes:
 #      - ./backend:/app
     environment:

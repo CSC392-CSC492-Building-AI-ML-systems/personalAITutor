@@ -6,7 +6,7 @@ export async function getHistory(courseCode: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:7000/message_history/${courseCode}`, {
+    const response = await fetch(`http://localhost:7001/message_history/${courseCode}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -36,7 +36,7 @@ export async function deleteHistory(courseCode: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:7000/delete_message_history/${courseCode}`, {
+    const response = await fetch(`http://localhost:7001/delete_message_history/${courseCode}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -64,7 +64,7 @@ export async function askQuestion(courseCode: string, question: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:7000/ask/${courseCode}`, {
+    const response = await fetch(`http://localhost:7001/ask/${courseCode}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

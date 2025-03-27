@@ -6,4 +6,4 @@ cd /app || exit
 flask db upgrade
 
 # Run the application with Gunicorn
-gunicorn -w 4 -b 0.0.0.0:7000 api_service.app:app
+gunicorn -w 4 -b 0.0.0.0:7001 api_service.app:app

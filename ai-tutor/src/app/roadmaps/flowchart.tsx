@@ -1,6 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import ReactFlow, { MiniMap, Controls, Background, Node, Edge } from "react-flow-renderer";
+import React, { useState, useEffect, useCallback } from "react";
+import { ReactFlow, Controls, Background, Node, Edge, PanOnScrollMode, useReactFlow, ReactFlowProvider, ReactFlowInstance } from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import { getFlowchart } from "../utils/courseUtils";
 
 // -------------------------------------------------------------------
@@ -122,7 +123,7 @@ const processFlowchartData = (flowchartData: FlowchartData) => {
 
   // Layout constants for positioning nodes
   const groupNodeX = 150;
-  const groupSpacingY = 500;
+  const groupSpacingY = 300;
   const topicRadius = 180;
 
   // Week node style
@@ -150,6 +151,8 @@ const processFlowchartData = (flowchartData: FlowchartData) => {
     data: { label: week.title },
     position: { x: groupNodeX, y: groupIndex * groupSpacingY + 20 },
     style: parentNodeStyle,
+    sourcePosition: 'bottom',
+    targetPosition: 'top'
   }));
 
   // 2. Topic nodes arranged in a circle around week nodes
@@ -158,15 +161,14 @@ const processFlowchartData = (flowchartData: FlowchartData) => {
     const baseY = groupNodes[groupIndex].position.y;
     const numberOfTopics = week.topics.length;
     return week.topics.map((topic, topicIndex) => {
-      const angle = (2 * Math.PI * topicIndex) / numberOfTopics - Math.PI / 2;
       return {
         id: topic.id,
         data: { label: topic.name },
         position: {
-          x: baseX + topicRadius * Math.cos(angle),
-          y: baseY + topicRadius * Math.sin(angle),
+          x: baseX + topicIndex * 175 - (numberOfTopics - 1) * 100 + ~~(topicIndex / ~~((numberOfTopics + 1) / 2)) * 100 - (numberOfTopics % 2) * 100,
+          y: baseY + 120
         },
-        style: topicNodeStyle,
+        style: topicNodeStyle
       };
     });
   });
@@ -177,7 +179,7 @@ const processFlowchartData = (flowchartData: FlowchartData) => {
       id: `${week.id}-${topic.id}`,
       source: week.id,
       target: topic.id,
-      animated: true,
+      animated: false,
       style: { stroke: colors.line, strokeWidth: 3 },
     }))
   );
@@ -235,6 +237,16 @@ const TopicDetailInfo = ({ topicId, onClose, topicLinks }) => {
         marginBottom: "20px",
       }}
     >
+      <button
+        onClick={onClose}
+        style={{
+          padding: "8px 12px",
+          cursor: "pointer",
+          color: "black", // "Close Details" text in black
+        }}
+      >
+        Close Details
+      </button>
       <h2 style={{ color: colors.text, marginBottom: "10px" }}>
         {topicData.name}
       </h2>
@@ -284,19 +296,22 @@ const TopicDetailInfo = ({ topicId, onClose, topicLinks }) => {
           ))}
         </ul>
       </div>
-      <button
-        onClick={onClose}
-        style={{
-          padding: "8px 12px",
-          cursor: "pointer",
-          color: "black", // "Close Details" text in black
-        }}
-      >
-        Close Details
-      </button>
     </div>
   );
 };
+
+function Flow(props: any) {
+  // Required for getting state of react flow
+  const { fitView, zoomTo } = useReactFlow();
+  const size = useWindowSize();
+
+  useEffect(() => {
+    fitView();
+    zoomTo(1.1, { duration: 0 });
+  }, [size]);
+ 
+  return <ReactFlow {...props} />;
+}
 
 // -------------------------------------------------------------------
 // Main Component: Flowchart
@@ -307,7 +322,17 @@ const Flowchart = ({ courseCode }) => {
   const [flowNodes, setFlowNodes] = useState<Node[]>([]);
   const [flowEdges, setFlowEdges] = useState<Edge[]>([]);
   const [topicLinks, setTopicLinks] = useState({});
+  const [translateExt, setTranslateExt] = useState([[-4000, 0], [4000, 0]]);
+  const [isReady, setIsReady] = useState(false);
 
+  const onInit = useCallback((reactFlowInstance: ReactFlowInstance) => {
+    // Called when everything is mounted and ready
+    
+    reactFlowInstance.fitView();
+    reactFlowInstance.zoomTo(1.1, { duration: 0 });
+
+  }, []);
+  
   useEffect(() => {
     const fetchFlowchartData = async () => {
       try {
@@ -317,89 +342,108 @@ const Flowchart = ({ courseCode }) => {
         setFlowNodes(processedData.flowNodes);
         setFlowEdges(processedData.flowEdges);
         setTopicLinks(processedData.topicLinks);
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+        if (processedData.flowNodes.length !== 0) {
+          processedData.flowNodes.forEach(node => {
+            const { x, y } = node.position;
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+          });
+  
+          const padding = 200; // Extra space around flowNodes
+      
+          setTranslateExt([
+            [-4000, minY - padding],
+            [4000, maxY + padding],
+          ]);
+
+          setIsReady(true);
+        }
       } catch (error) {
         console.error("Failed to fetch flowchart data:", error);
       }
     };
 
     fetchFlowchartData();
-  }, [courseCode]);
+  }, []);
 
-  if (!flowchartData) {
-    return <div>Loading...</div>;
-  }
 
   const handleNodeClick = (event, node) => {
     setSelectedTopic((prev) => (prev === node.id ? null : node.id));
   };
 
-  return (
-    <div
-      style={{
-        backgroundColor: colors.background,
-        minHeight: "100vh",
-        fontFamily: "sans-serif",
-        padding: "20px",
-      }}
-    >
-      <h1
-        style={{
-          textAlign: "center",
-          color: colors.text,
-          marginBottom: "20px",
-        }}
-      >
-        Interactive Roadmap
-      </h1>
-      <div style={{ display: "flex", gap: "20px" }}>
-        {/* Left Pane: Detailed Topic Information */}
-        <div style={{ flex: 0.5 }}>
-          {selectedTopic && topicLinks[selectedTopic] ? (
-            <TopicDetailInfo
-              topicId={selectedTopic}
-              onClose={() => setSelectedTopic(null)}
-              topicLinks={topicLinks}
-            />
-          ) : (
-            <div
-              style={{
-                padding: "20px",
-                border: `1px solid ${colors.border}`,
-                borderRadius: "6px",
-                backgroundColor: colors.boxBackground,
-                color: colors.text,
-              }}
-            >
-              <p>
-                Click on a topic node in the roadmap (right side) to view its
-                associated links.
-              </p>
-            </div>
-          )}
-        </div>
-        {/* Right Pane: Interactive Flowchart */}
-        <div
-          style={{
-            flex: 1.5,
-            height: "700px",
-            border: `1px solid ${colors.border}`,
-            borderRadius: "4px",
-          }}
-        >
-          <ReactFlow
-            nodes={flowNodes}
-            edges={flowEdges}
-            onNodeClick={handleNodeClick}
-            fitView
-          >
-            <MiniMap nodeColor={() => colors.boxBackground} />
-            <Controls />
-            <Background color={colors.line} gap={16} />
-          </ReactFlow>
-        </div>
+  const proOptions = { hideAttribution: true };
+  
+  return (isReady ?
+    <div className="flex flex-col h-full">
+      <div className="flex-0.5 relative w-fit mx-auto mt-10 mb-10">
+        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-6 -mx-4 bg-[#E9F3DA]"></div>
+        <div className="relative text-5xl">{courseCode.toUpperCase()} ROADMAP</div>
       </div>
-    </div>
-  );
-};
+      <div className="flex-1 w-full h-auto">
+        <ReactFlowProvider>
+          <Flow
+              nodes={flowNodes}
+              edges={flowEdges}
+              onNodeClick={handleNodeClick}
+              proOptions={proOptions}
+              translateExtent={translateExt} 
+              panOnDrag={false}
+              panOnScroll={true}
+              panOnScrollMode={PanOnScrollMode.Vertical}
+              fitView={false}
+              onInit={onInit}
+              zoomOnDoubleClick={false}
+              zoomOnPinch={false}
+            >
+          </Flow>
+        </ReactFlowProvider>
+      </div>
+      <div className="absolute top-25 right-0 w-1/4 h-full">
+        {selectedTopic && topicLinks[selectedTopic] ? (
+          <TopicDetailInfo
+            topicId={selectedTopic}
+            onClose={() => setSelectedTopic(null)}
+            topicLinks={topicLinks}
+          />
+        ) : null}
+      </div>
+    </div> : null
+  )};
 
 export default Flowchart;
+
+// Hook
+function useWindowSize() {
+  // Initialize state with undefined width/height so server and client renders match
+  // Learn more here: https://joshwcomeau.com/react/the-perils-of-rehydration/
+  const [windowSize, setWindowSize] = useState({
+    width: undefined,
+    height: undefined,
+  });
+
+  useEffect(() => {
+    // only execute all the code below in client side
+    // Handler to call on window resize
+    function handleResize() {
+      // Set window width/height to state
+
+      setWindowSize({
+        width: window.innerWidth as unknown as undefined, // workaround to make linter happy
+        height: window.innerHeight as unknown as undefined // same here
+      });
+    }
+    
+    // Add event listener
+    window.addEventListener("resize", handleResize);
+     
+    // Call handler right away so state gets updated with initial window size
+    handleResize();
+    
+    // Remove event listener on cleanup
+    return () => window.removeEventListener("resize", handleResize);
+  }, []); // Empty array ensures that effect is only run on mount
+  return windowSize;
+}
