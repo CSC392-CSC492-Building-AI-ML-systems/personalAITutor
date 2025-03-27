@@ -6,7 +6,7 @@ export async function getFlowchart(courseCode: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:7000/courses/get-flowchart/${courseCode}`, {
+    const response = await fetch(`http://localhost:7001/courses/get-flowchart/${courseCode}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -33,7 +33,7 @@ export async function enrollCourse(courseCode: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:7000/courses/enroll/${courseCode}`, {
+    const response = await fetch(`http://localhost:7001/courses/enroll/${courseCode}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -60,7 +60,7 @@ export async function dropCourse(courseCode: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:7000/courses/drop-course/${courseCode}`, {
+    const response = await fetch(`http://localhost:7001/courses/drop-course/${courseCode}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -87,7 +87,7 @@ export async function getUserCourses() {
   }
 
   try {
-    const response = await fetch("http://localhost:7000/courses/user-courses", {
+    const response = await fetch("http://localhost:7001/courses/user-courses", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -108,7 +108,7 @@ export async function getUserCourses() {
 
 export async function getAllCourses() {
   try {
-    const response = await fetch("http://localhost:7000/courses/", {
+    const response = await fetch("http://localhost:7001/courses/", {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
