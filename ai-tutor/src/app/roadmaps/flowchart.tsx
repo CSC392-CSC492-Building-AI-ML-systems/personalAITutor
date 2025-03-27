@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
-import { ReactFlow, Controls, Background, Node, Edge, PanOnScrollMode, useReactFlow, ReactFlowProvider, ReactFlowInstance } from '@xyflow/react';
+import { ReactFlow, Node, Edge, PanOnScrollMode, useReactFlow, ReactFlowProvider, ReactFlowInstance } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { getFlowchart } from "../utils/courseUtils";
 
@@ -124,7 +124,7 @@ const processFlowchartData = (flowchartData: FlowchartData) => {
   // Layout constants for positioning nodes
   const groupNodeX = 150;
   const groupSpacingY = 300;
-  const topicRadius = 180;
+  // const topicRadius = 180;
 
   // Week node style
   const parentNodeStyle = {
@@ -300,7 +300,7 @@ const TopicDetailInfo = ({ topicId, onClose, topicLinks }) => {
   );
 };
 
-function Flow(props: any) {
+function Flow(props) {
   // Required for getting state of react flow
   const { fitView, zoomTo } = useReactFlow();
   const size = useWindowSize();
@@ -308,7 +308,7 @@ function Flow(props: any) {
   useEffect(() => {
     fitView();
     zoomTo(1.1, { duration: 0 });
-  }, [size]);
+  }, [fitView, zoomTo, size]);
  
   return <ReactFlow {...props} />;
 }
@@ -318,7 +318,7 @@ function Flow(props: any) {
 // -------------------------------------------------------------------
 const Flowchart = ({ courseCode }) => {
   const [selectedTopic, setSelectedTopic] = useState(null);
-  const [flowchartData, setFlowchartData] = useState(null);
+  // const [flowchartData, setFlowchartData] = useState(null);
   const [flowNodes, setFlowNodes] = useState<Node[]>([]);
   const [flowEdges, setFlowEdges] = useState<Edge[]>([]);
   const [topicLinks, setTopicLinks] = useState({});
@@ -338,16 +338,16 @@ const Flowchart = ({ courseCode }) => {
       try {
         const data = await getFlowchart(courseCode);
         const processedData = processFlowchartData(data);
-        setFlowchartData(data);
+        // setFlowchartData(data);
         setFlowNodes(processedData.flowNodes);
         setFlowEdges(processedData.flowEdges);
         setTopicLinks(processedData.topicLinks);
 
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
 
         if (processedData.flowNodes.length !== 0) {
           processedData.flowNodes.forEach(node => {
-            const { x, y } = node.position;
+            const y = node.position.y;
             minY = Math.min(minY, y);
             maxY = Math.max(maxY, y);
           });
@@ -367,7 +367,7 @@ const Flowchart = ({ courseCode }) => {
     };
 
     fetchFlowchartData();
-  }, []);
+  }, [courseCode]);
 
 
   const handleNodeClick = (event, node) => {
