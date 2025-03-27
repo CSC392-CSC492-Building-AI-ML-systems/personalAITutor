@@ -123,7 +123,7 @@ const processFlowchartData = (flowchartData: FlowchartData) => {
 
   // Layout constants for positioning nodes
   const groupNodeX = 150;
-  const groupSpacingY = 500;
+  const groupSpacingY = 300;
   const topicRadius = 180;
 
   // Week node style
@@ -151,6 +151,8 @@ const processFlowchartData = (flowchartData: FlowchartData) => {
     data: { label: week.title },
     position: { x: groupNodeX, y: groupIndex * groupSpacingY + 20 },
     style: parentNodeStyle,
+    sourcePosition: 'bottom',
+    targetPosition: 'top'
   }));
 
   // 2. Topic nodes arranged in a circle around week nodes
@@ -159,15 +161,14 @@ const processFlowchartData = (flowchartData: FlowchartData) => {
     const baseY = groupNodes[groupIndex].position.y;
     const numberOfTopics = week.topics.length;
     return week.topics.map((topic, topicIndex) => {
-      const angle = (2 * Math.PI * topicIndex) / numberOfTopics - Math.PI / 2;
       return {
         id: topic.id,
         data: { label: topic.name },
         position: {
-          x: baseX + topicRadius * Math.cos(angle),
-          y: baseY + topicRadius * Math.sin(angle),
+          x: baseX + topicIndex * 175 - (numberOfTopics - 1) * 100 + ~~(topicIndex / ~~((numberOfTopics + 1) / 2)) * 100 - (numberOfTopics % 2) * 100,
+          y: baseY + 120
         },
-        style: topicNodeStyle,
+        style: topicNodeStyle
       };
     });
   });
@@ -346,7 +347,7 @@ const Flowchart = ({ courseCode }) => {
 
         if (processedData.flowNodes.length !== 0) {
           processedData.flowNodes.forEach(node => {
-            const { y } = node.position;
+            const { x, y } = node.position;
             minY = Math.min(minY, y);
             maxY = Math.max(maxY, y);
           });
