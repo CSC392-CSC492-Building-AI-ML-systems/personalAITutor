@@ -396,6 +396,7 @@ const Flowchart = ({ courseCode }) => {
               fitView={false}
               onInit={onInit}
               zoomOnDoubleClick={false}
+              zoomOnPinch={false}
             >
           </Flow>
         </ReactFlowProvider>
