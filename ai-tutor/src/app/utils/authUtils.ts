@@ -2,7 +2,7 @@ const API_BASE_URL = "https://advsry.utm.utoronto.ca/api";
 
 export async function register(username: string, email: string, password: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/register/`, {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, email, password }),
@@ -29,7 +29,7 @@ export async function register(username: string, email: string, password: string
 
 export async function login(email: string, password: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/login/`, {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -61,7 +61,7 @@ export async function logout() {
       throw new Error("No authentication token found");
     }
 
-    const response = await fetch(`${API_BASE_URL}/auth/logout/`, {
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -90,7 +90,7 @@ export async function deleteQuestions(courseName: string) {
 
   try {
     const response = await fetch(
-      `${API_BASE_URL}/auth/delete-questions/${courseName}/`,
+      `${API_BASE_URL}/auth/delete-questions/${courseName}`,
       {
         method: "DELETE",
         headers: {
@@ -123,7 +123,7 @@ export async function deleteUser() {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/delete-user/`, {
+    const response = await fetch(`${API_BASE_URL}/auth/delete-user`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

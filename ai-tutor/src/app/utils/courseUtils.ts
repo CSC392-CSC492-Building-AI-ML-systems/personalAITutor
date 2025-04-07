@@ -110,7 +110,7 @@ export async function getUserCourses() {
 
 export async function getAllCourses() {
   try {
-    const response = await fetch(`${API_BASE_URL}/courses/`, {
+    const response = await fetch(`${API_BASE_URL}/courses`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
