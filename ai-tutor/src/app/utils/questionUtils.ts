@@ -1,3 +1,5 @@
+const API_BASE_URL = "https://advsry.utm.utoronto.ca/api";
+
 export async function getHistory(courseCode: string) {
   const token = localStorage.getItem("authToken");
 
@@ -6,7 +8,7 @@ export async function getHistory(courseCode: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:7001/message_history/${courseCode}`, {
+    const response = await fetch(`${API_BASE_URL}/message_history/${courseCode}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -36,7 +38,7 @@ export async function deleteHistory(courseCode: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:7001/delete_message_history/${courseCode}`, {
+    const response = await fetch(`${API_BASE_URL}/delete_message_history/${courseCode}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -55,7 +57,6 @@ export async function deleteHistory(courseCode: string) {
   }
 }
 
-
 export async function askQuestion(courseCode: string, question: string) {
   const token = localStorage.getItem("authToken");
 
@@ -64,7 +65,7 @@ export async function askQuestion(courseCode: string, question: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:7001/ask/${courseCode}`, {
+    const response = await fetch(`${API_BASE_URL}/ask/${courseCode}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

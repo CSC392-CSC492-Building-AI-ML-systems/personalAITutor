@@ -42,6 +42,8 @@ export default function Chatbot({
 
   // Use a ref as a lock so that the landing query is executed only once
   const queryExecutedRef = useRef(false);
+  // Ref to store the last fetched course list for comparison.
+  const coursesRef = useRef<Course[]>([]);
 
   useEffect(() => {
     if (courseError) {
@@ -53,27 +55,32 @@ export default function Chatbot({
   const fetchCourses = useCallback(async () => {
     try {
       const allCoursesResponse = await getAllCourses();
-      const userCoursesResponse = await getUserCourses();
-      const allCourseCodes = allCoursesResponse.courses;
-      const enrolledCourseCodes = userCoursesResponse.courses.map(
-        (course: Course) => course.code
-      );
-      const coursesWithChatbot = allCoursesResponse.courses
-        .filter((course: Course) => course.has_chatbot)
-        .map((course: Course) => course.code);
-      setAllCourses(allCourseCodes);
-      setEnrolledCourses(enrolledCourseCodes);
-      setChatbotCourses(coursesWithChatbot);
-      for (const courseCode of enrolledCourseCodes) {
-        const data = await getHistory(courseCode);
-        if (data && data.length !== 0) {
-          setSelectedSidebarCourses((prev) => {
-            const course = allCourseCodes.find((c: { code }) => c.code === courseCode);
-            if (course && !prev.some(c => c.code === courseCode)) {
-              return [...prev, course];
-            }
-            return prev;
-          });
+      // Only update if the course list has changed
+      if (
+        JSON.stringify(allCoursesResponse.courses) !== JSON.stringify(coursesRef.current)
+      ) {
+        coursesRef.current = allCoursesResponse.courses;
+        const userCoursesResponse = await getUserCourses();
+        const enrolledCourseCodes = userCoursesResponse.courses.map(
+          (course: Course) => course.code
+        );
+        const coursesWithChatbot = allCoursesResponse.courses
+          .filter((course: Course) => course.has_chatbot)
+          .map((course: Course) => course.code);
+        setAllCourses(allCoursesResponse.courses);
+        setEnrolledCourses(enrolledCourseCodes);
+        setChatbotCourses(coursesWithChatbot);
+        for (const courseCode of enrolledCourseCodes) {
+          const data = await getHistory(courseCode);
+          if (data && data.length !== 0) {
+            setSelectedSidebarCourses((prev) => {
+              const course = allCoursesResponse.courses.find((c: { code: string }) => c.code === courseCode);
+              if (course && !prev.some(c => c.code === courseCode)) {
+                return [...prev, course];
+              }
+              return prev;
+            });
+          }
         }
       }
     } catch (error) {
@@ -98,12 +105,12 @@ export default function Chatbot({
         .map((qa: { question: string; answer: string; sources? }) => {
           const parsedAnswer = marked(qa.answer);
 
-          const extractedSources = (qa.sources ?? [])
-            .map(src => ({ source: src.source, score: src.score.toFixed(2) }))
-            .filter((s: { source: string | null }) => s.source);
+            const extractedSources = (qa.sources ?? [])
+              .map(src => ({ source: src.source, score: src.score.toFixed(2) }))
+              .filter((s: { source: string | null }) => s.source);
 
-          const sourceListHtml = extractedSources.length > 0
-            ? `
+            const sourceListHtml = extractedSources.length > 0
+              ? `
               <div style="margin-top: 1rem;">
                 <strong>Sources:</strong>
                 <div style="margin-top: 0.5rem;">
@@ -111,14 +118,14 @@ export default function Chatbot({
                 </div>
               </div>
             `
-            : "";
+              : "";
 
-          return [
-            { text: qa.question, sender: "user" },
-            { text: parsedAnswer + sourceListHtml, sender: "bot" },
-          ];
-        })
-        .flat();
+            return [
+              { text: qa.question, sender: "user" },
+              { text: parsedAnswer + sourceListHtml, sender: "bot" },
+            ];
+          })
+          .flat();
         setMessages((prev) => ({
           ...prev,
           [course]: (prev[course] || []).concat(messageHistory),
@@ -153,12 +160,12 @@ export default function Chatbot({
   }, [enrolledCourses]);
 
   const addCourse = useCallback(async (courseCode: string) => {
-    const course = allCourses.find(c => c.code === courseCode);
-    if (!course) return;
+    const courseObj = allCourses.find(c => c.code === courseCode);
+    if (!courseObj) return;
 
     setSelectedSidebarCourses((prev) => {
       if (!prev.some(c => c.code === courseCode)) {
-        return [...prev, course];
+        return [...prev, courseObj];
       }
       return prev;
     });
@@ -189,7 +196,7 @@ export default function Chatbot({
       if (activeCourse === courseCode) {
         setActiveCourse(null);
       }
-      // Refetch courses to update the sidebar
+      // Refetch courses to update the sidebar if there is a change.
       await fetchCourses();
     } catch (error) {
       console.error("Failed to delete course history:", error);
@@ -289,45 +296,49 @@ export default function Chatbot({
         throw new Error("Invalid response format");
       }
     } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === "User not authenticated") {
-        setMessages((prev) => ({
-          ...prev,
-          [activeCourse]: [
-            ...prev[activeCourse].slice(0, -1),
-            { text: "User not authenticated. Please log in!", sender: "bot" },
-          ],
-        }));
-      } else if (error.message === "Too many requests") {
-        setMessages((prev) => ({
-          ...prev,
-          [activeCourse]: [
-            ...prev[activeCourse].slice(0, -1),
-            { text: "Too many requests. Please try again later!", sender: "bot" },
-          ],
-        }));
+      if (error instanceof Error) {
+        if (error.message === "User not authenticated") {
+          setMessages((prev) => ({
+            ...prev,
+            [activeCourse]: [
+              ...prev[activeCourse].slice(0, -1),
+              { text: "User not authenticated. Please log in!", sender: "bot" },
+            ],
+          }));
+        } else if (error.message === "Too many requests") {
+          setMessages((prev) => ({
+            ...prev,
+            [activeCourse]: [
+              ...prev[activeCourse].slice(0, -1),
+              { text: "Too many requests. Please try again later!", sender: "bot" },
+            ],
+          }));
+        } else {
+          console.error("Error asking question:", error);
+          setMessages((prev) => ({
+            ...prev,
+            [activeCourse]: [
+              ...prev[activeCourse].slice(0, -1),
+              { text: "Error generating response. Please try again!", sender: "bot" },
+            ],
+          }));
+        }
       } else {
-        console.error("Error asking question:", error);
-        setMessages((prev) => ({
-          ...prev,
-          [activeCourse]: [
-            ...prev[activeCourse].slice(0, -1),
-            { text: "Error generating response. Please try again!", sender: "bot" },
-          ],
-        }));
+        console.error("Unknown error:", error);
       }
-    } else {
-      console.error("Unknown error:", error);
     }
-  }
   }, [input, activeCourse, chatbotCourses, scrollToBottom, updateEnrollmentStatus]);
 
+  // Call fetchCourses only once on component mount.
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
+
+  // Handle search params (course & query) once courses are available.
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await fetchCourses();
-        if (course && query && !queryExecutedRef.current) {
-          if (allCourses.length === 0) return;
+        if (course && query && !queryExecutedRef.current && allCourses.length > 0) {
           await addCourse(course);
           setInput(query);
           setActiveCourse(course);
@@ -339,8 +350,7 @@ export default function Chatbot({
       }
     };
     fetchData().catch((error) => console.error("Failed to fetch data:", error));
-  }, [course, query, fetchCourses, addCourse, allCourses, router]);
-
+  }, [course, query, allCourses, addCourse, router]);
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -376,7 +386,7 @@ export default function Chatbot({
         </aside>
         <main className="flex-1 flex flex-col h-full">
           <div ref={chatRef} className="flex-1 p-4 overflow-y-auto min-h-0">
-          {(activeCourse && messages[activeCourse]
+            {(activeCourse && messages[activeCourse]
               ? messages[activeCourse]
               : []
             ).map((msg, index) => (
@@ -385,9 +395,7 @@ export default function Chatbot({
                 className={`mb-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`p-3 rounded-lg max-w-3xl ${
-                    msg.sender === "user" ? "bg-yellow-100" : "bg-[#E9F3DA]"
-                  }`}
+                  className={`p-3 rounded-lg max-w-3xl ${msg.sender === "user" ? "bg-yellow-100" : "bg-[#E9F3DA]"}`}
                 >
                   <div dangerouslySetInnerHTML={{ __html: msg.text.split("Sources:")[0] }} />
                   {msg.sender === "bot" && msg.text.includes("Sources:") && (
@@ -410,7 +418,7 @@ export default function Chatbot({
                         <div
                           className="mt-2"
                           dangerouslySetInnerHTML={{
-                            __html: msg.text.split("Sources:")[1], // Extract the sources section
+                            __html: msg.text.split("Sources:")[1],
                           }}
                         />
                       )}

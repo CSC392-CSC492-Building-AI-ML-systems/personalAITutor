@@ -1,3 +1,5 @@
+const API_BASE_URL = "https://advsry.utm.utoronto.ca/api";
+
 export async function getFlowchart(courseCode: string) {
   const token = localStorage.getItem("authToken");
 
@@ -6,7 +8,7 @@ export async function getFlowchart(courseCode: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:7001/courses/get-flowchart/${courseCode}`, {
+    const response = await fetch(`${API_BASE_URL}/courses/get-flowchart/${courseCode}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -33,7 +35,7 @@ export async function enrollCourse(courseCode: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:7001/courses/enroll/${courseCode}`, {
+    const response = await fetch(`${API_BASE_URL}/courses/enroll/${courseCode}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -60,7 +62,7 @@ export async function dropCourse(courseCode: string) {
   }
 
   try {
-    const response = await fetch(`http://localhost:7001/courses/drop-course/${courseCode}`, {
+    const response = await fetch(`${API_BASE_URL}/courses/drop-course/${courseCode}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -87,7 +89,7 @@ export async function getUserCourses() {
   }
 
   try {
-    const response = await fetch("http://localhost:7001/courses/user-courses", {
+    const response = await fetch(`${API_BASE_URL}/courses/user-courses`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -108,7 +110,7 @@ export async function getUserCourses() {
 
 export async function getAllCourses() {
   try {
-    const response = await fetch("http://localhost:7001/courses/", {
+    const response = await fetch(`${API_BASE_URL}/courses/`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
